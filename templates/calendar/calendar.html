@@ -10,6 +10,16 @@
     @media (max-width: 991px) { .main-content { margin-left: 0; } }
 
     .cal-page { padding: 2rem; }
+    
+    .cal-page .tx-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        width: 100%;
+    }
+    .cal-page .tx-link:hover {
+        background: #F9FAFB;
+    }
 
     /* Header */
     .cal-header {
@@ -311,7 +321,7 @@
                             <div class="cal-day empty"></div>
                         {% else %}
                             <div class="cal-day {% if cell.is_today %}today{% endif %}"
-                                 onclick="openDayModal({{ cell.day }}, {{ cell.events|safe_json }}, {{ cell.tx|safe_json }})">
+                                 onclick="openDayModal({{ cell.day }}, {{ cell.events|safe_json }}, {{ cell.tx|safe_json }}, {{ cell.tx_list|safe_json }})">
 
                                 <div class="day-num">
                                     {% if cell.is_today %}
@@ -419,7 +429,7 @@
 // Build month/year for modal title
 const MONTH_NAME = "{{ month_name }}";
 
-function openDayModal(day, events, tx) {
+function openDayModal(day, events, tx, txList) {
     const backdrop = document.getElementById('dayModalBackdrop');
     const title    = document.getElementById('dayModalTitle');
     const body     = document.getElementById('dayModalBody');
@@ -443,6 +453,64 @@ function openDayModal(day, events, tx) {
                 </div>`;
         });
     }
+
+    if (tx && (tx.expense > 0 || tx.income > 0)) {
+        if (tx.expense > 0) {
+            html += `
+                <div class="modal-event-row">
+                    <div class="modal-event-icon" style="background:#FEE2E2;color:#EF4444">
+                        <i class="bi bi-arrow-down-circle-fill"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight:600;font-size:0.9rem">₹${Number(tx.expense).toLocaleString('en-IN')} spent</div>
+                    <div style="font-size:0.78rem;color:#9CA3AF">${tx.count} transaction${tx.count !== 1 ? 's' : ''} logged</div>
+                    </div>
+                </div>`;
+        }
+        if (tx.income > 0) {
+            html += `
+                <div class="modal-event-row">
+                    <div class="modal-event-icon" style="background:#DCFCE7;color:#16A34A">
+                        <i class="bi bi-arrow-up-circle-fill"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight:600;font-size:0.9rem">₹${Number(tx.income).toLocaleString('en-IN')} earned</div>
+                    <div style="font-size:0.78rem;color:#9CA3AF">${tx.count} transaction${tx.count !== 1 ? 's' : ''} logged</div>
+                    </div>
+                </div>`;
+        }
+        
+        if (txList && txList.length) {
+            html += '<div style="margin-top:1rem;border-top:1px solid #E5E7EB;padding-top:0.75rem"><div style="font-weight:600;font-size:0.85rem;color:#6B7280;margin-bottom:0.5rem">Transactions:</div>';
+            txList.forEach(t => {
+                const isExpense = t.transaction_type === 'expense';
+                const cat = t.category__name || 'Uncategorized';
+                const color = t.category__color || '#6B7280';
+                const icon = t.category__icon || 'bi-tag';
+                const desc = t.description || cat;
+                const url = isExpense ? "{% url 'expense_list' %}" : "{% url 'income_list' %}";
+                const amtPrefix = isExpense ? '-' : '+';
+                html += `
+                    <a href="${url}" class="tx-link" style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;border-bottom:1px solid #F3F4F6;margin-bottom:0.25rem">
+                        <div style="width:28px;height:28px;border-radius:6px;background:${color}20;color:${color};display:flex;align-items:center;justify-content:center">
+                            <i class="bi ${icon}"></i>
+                        </div>
+                        <div style="flex:1;min-width:0">
+                            <div style="font-weight:500;font-size:0.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${desc}</div>
+                            <div style="font-size:0.72rem;color:#9CA3AF">${cat}</div>
+                        </div>
+                        <div style="font-family:'Space Mono',monospace;font-weight:600;font-size:0.85rem;color:${isExpense ? '#EF4444' : '#22C55E'}">${amtPrefix}₹${Number(t.amount).toLocaleString('en-IN')}</div>
+                    </a>`;
+            });
+            html += '</div>';
+        }
+    } else if (!events || events.length === 0) {
+        html = '<div class="empty-day-msg"><i class="bi bi-calendar-check" style="font-size:2rem;color:#9CA3AF"></i><p class="mt-2 mb-0">Nothing scheduled for this day</p></div>';
+    }
+
+    body.innerHTML = html;
+    backdrop.classList.add('open');
+}
 
     if (tx && (tx.expense > 0 || tx.income > 0)) {
         if (tx.expense > 0) {

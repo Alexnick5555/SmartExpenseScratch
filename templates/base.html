@@ -25,6 +25,11 @@
 </head>
 <body class="{% if request.user.is_authenticated %}dashboard-body{% endif %}">
     {% if request.user.is_authenticated %}
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+            <i class="bi bi-list"></i>
+            <span class="btn-text">Menu</span>
+        </button>
         {% include 'includes/sidebar.html' %}
         {% include 'includes/header.html' %}
     {% endif %}

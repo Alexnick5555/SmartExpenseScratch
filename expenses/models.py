@@ -131,20 +131,30 @@ class Transaction(models.Model):
         return f"{self.transaction_type.capitalize()}: ₹{self.amount} - {self.description[:30]}"
 
     def save(self, *args, **kwargs):
-        # Update account balance
-        if self.pk:
-            old_transaction = Transaction.objects.get(pk=self.pk)
-            if old_transaction.account == self.account:
-                if old_transaction.transaction_type == 'income':
-                    self.account.balance -= old_transaction.amount
-                else:
-                    self.account.balance += old_transaction.amount
+        is_new = self.pk is None
+        
+        if not is_new and self.account:
+            try:
+                old_transaction = Transaction.objects.get(pk=self.pk)
+                old_account = old_transaction.account
+                new_account = self.account
+                
+                if old_account and old_account != new_account:
+                    if old_transaction.transaction_type == 'income':
+                        old_account.balance -= old_transaction.amount
+                    else:
+                        old_account.balance += old_transaction.amount
+                    old_account.save()
+            except Transaction.DoesNotExist:
+                pass
+        
         if self.account:
             if self.transaction_type == 'income':
                 self.account.balance += self.amount
             else:
                 self.account.balance -= self.amount
             self.account.save()
+        
         super().save(*args, **kwargs)
 
 

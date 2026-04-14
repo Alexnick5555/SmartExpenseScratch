@@ -20,6 +20,15 @@
 
         <form method="post">
             {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">First Name</label>
@@ -33,19 +42,38 @@
             <div class="mb-3">
                 <label class="form-label">Username</label>
                 {{ form.username }}
+                {% if form.username.errors %}
+                    <div class="text-danger small">{{ form.username.errors }}</div>
+                {% endif %}
             </div>
             <div class="mb-3">
                 <label class="form-label">Email</label>
                 {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="text-danger small">{{ form.email.errors }}</div>
+                {% endif %}
             </div>
             <div class="mb-3">
                 <label class="form-label">Password</label>
                 {{ form.password1 }}
+                {% if form.password1.errors %}
+                    <div class="text-danger small">{{ form.password1.errors }}</div>
+                {% endif %}
                 <small class="text-muted">At least 8 characters</small>
+                <div class="password-strength mt-2">
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar" id="passwordStrengthBar" role="progressbar" style="width: 0%;"></div>
+                    </div>
+                    <small id="passwordStrengthText" class="text-muted"></small>
+                </div>
             </div>
             <div class="mb-4">
                 <label class="form-label">Confirm Password</label>
                 {{ form.password2 }}
+                {% if form.password2.errors %}
+                    <div class="text-danger small">{{ form.password2.errors }}</div>
+                {% endif %}
+                <small id="passwordMatchFeedback" class="text-muted"></small>
             </div>
             <button type="submit" class="btn btn-primary w-100 mb-3">Create Account</button>
         </form>

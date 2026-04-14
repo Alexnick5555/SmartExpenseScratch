@@ -44,14 +44,36 @@ const VoiceInput = (() => {
     // ── Parsers ────────────────────────────────────────────────────────────────
 
     function extractAmount(text) {
+        const wordMap = { 
+            lakh: 100000, lac: 100000, 
+            thousand: 1000, k: 1000, 
+            hundred: 100
+        };
+        
         // Handle "1 lakh", "2 thousand", "5 hundred", "1.5k"
-        const wordMap = { lakh: 100000, lac: 100000, thousand: 1000, hundred: 100, k: 1000 };
         let match = text.match(/(\d+(?:\.\d+)?)\s*(lakh|lac|thousand|hundred|k)\b/i);
         if (match) return String(parseFloat(match[1]) * wordMap[match[2].toLowerCase()]);
 
-        // Plain number with optional commas
-        match = text.match(/(\d[\d,]*(?:\.\d+)?)/);
-        if (match) return match[1].replace(/,/g, '');
+        // Handle word numbers like "five hundred", "two thousand"
+        const wordNumbers = {
+            'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+            'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+            'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15,
+            'sixteen': 16, 'seventeen': 17, 'eighteen': 18, 'nineteen': 19, 'twenty': 20,
+            'thirty': 30, 'forty': 40, 'fifty': 50, 'sixty': 60, 'seventy': 70,
+            'eighty': 80, 'ninety': 90
+        };
+        
+        const wordMatch = text.toLowerCase().match(/(\w+)\s*(hundred|thousand|lakh|k|lac)/);
+        if (wordMatch && wordNumbers[wordMatch[1]]) {
+            const num = wordNumbers[wordMatch[1]];
+            const multiplier = wordMatch[2] === 'hundred' ? 100 : wordMatch[2] === 'thousand' || wordMatch[2] === 'k' ? 1000 : 100000;
+            return String(num * multiplier);
+        }
+        
+        // Plain number with optional commas and currency symbols
+        const numMatch = text.match(/₹?\s*(\d[\d,]*(?:\.\d+)?)/);
+        if (numMatch) return numMatch[1].replace(/,/g, '');
 
         return '';
     }
@@ -94,12 +116,41 @@ const VoiceInput = (() => {
     }
 
     function buildDescription(text, amount, categoryName) {
-        // Remove the detected amount from description to keep it clean
         let desc = text;
-        if (amount) desc = desc.replace(new RegExp(amount.replace('.', '\\.'), 'g'), '').trim();
-        // Capitalise first letter
-        desc = desc.charAt(0).toUpperCase() + desc.slice(1);
-        return desc || (categoryName ? `${categoryName} expense` : '');
+        
+        // Remove amount patterns
+        if (amount) {
+            const amountStr = String(amount).replace('.', '\\.');
+            desc = desc.replace(new RegExp(amountStr, 'gi'), '');
+            desc = desc.replace(/Rs\.?\s*\d+[\d,]*/gi, '');
+            desc = desc.replace(/₹\s*\d+[\d,]*/gi, '');
+            desc = desc.replace(/\d+\s*(lakh|lac|thousand|hundred|k)/gi, '');
+        }
+        
+        // More comprehensive list of words to remove
+        const removeWords = ['spent', 'spend', 'paid', 'pay', 'bought', 'buy', 'purchase',
+            'expense', 'cost', 'charged', 'deducted', 'used', 'withdrawn', 'on',
+            'for', 'to', 'at', 'the', 'a', 'an', 'my', 'i', 'received', 'receive',
+            'earned', 'earn', 'got', 'credited', 'deposited', 'transferred',
+            'rupees', 'rupee', 'rs', 'inr', 'amount', 'today', 'yesterday', 
+            'this', 'month', 'week', 'day', 'morning', 'evening', 'night',
+            'just', 'only', 'mere', 'liye', 'ke', 'ka', 'ki', 'ke liye'];
+        
+        const words = desc.split(/\s+/).filter(w => {
+            const lower = w.toLowerCase().replace(/[^\w]/g, '');
+            return lower.length > 2 && !removeWords.includes(lower);
+        });
+        
+        // Take first 4-5 meaningful words for description
+        if (words.length > 0) {
+            desc = words.slice(0, 5).join(' ');
+            // Capitalize first letter
+            desc = desc.charAt(0).toUpperCase() + desc.slice(1);
+            return desc;
+        }
+        
+        // Fallback
+        return categoryName ? `${categoryName}` : 'Expense';
     }
 
     function parse(transcript, categorySelectEl) {

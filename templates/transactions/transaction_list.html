@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Transactions - SmartExpense{% endblock %}
+{% block page_title %}All Transactions{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content { margin-left: 260px; padding-top: 80px; min-height: 100vh; }
+    .content-area { padding: 2rem; }
+    .page-card { background: white; border-radius: 16px; padding: 1.5rem; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; }
+    
+    .summary-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    .summary-card { background: #F8FAFC; padding: 1.25rem; border-radius: 12px; }
+    .summary-label { font-size: 0.8rem; color: #6B7280; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .summary-value { font-size: 1.5rem; font-weight: 700; margin-top: 0.25rem; }
+    .summary-value.income { color: #22C55E; }
+    .summary-value.expense { color: #EF4444; }
+    .summary-value.net { color: #6366F1; }
+    
+    .filter-bar { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .filter-bar .form-select, .filter-bar .form-control { min-width: 140px; }
+    
+    .tx-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .tx-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; border-radius: 12px; background: #F9FAFB; transition: all 0.2s; }
+    .tx-item:hover { background: #F1F5F9; }
+    .tx-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .tx-details { flex: 1; min-width: 0; }
+    .tx-title { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tx-meta { font-size: 0.8rem; color: #6B7280; display: flex; gap: 0.75rem; align-items: center; }
+    .tx-amount { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 1rem; }
+    .tx-amount.expense { color: #EF4444; }
+    .tx-amount.income { color: #22C55E; }
+    
+    .type-badge { padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
+    .type-badge.expense { background: #FEE2E2; color: #EF4444; }
+    .type-badge.income { background: #DCFCE7; color: #16A34A; }
+    
+    .empty-state { text-align: center; padding: 3rem; color: #6B7280; }
+    .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+    
+    @media (max-width: 991px) { .main-content { margin-left: 0; } }
+    @media (max-width: 768px) { .summary-cards { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="content-area">
+        <div class="page-card">
+            <div class="page-header">
+                <h2 class="page-title"><i class="bi bi-arrow-left-right me-2"></i>Transactions</h2>
+                <a href="{% url 'export_transactions' %}" class="btn btn-outline-primary"><i class="bi bi-download me-2"></i>Export</a>
+            </div>
+            
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <div class="summary-label">Total Inflow</div>
+                    <div class="summary-value income">₹{{ total_income|floatformat:2 }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Total Outflow</div>
+                    <div class="summary-value expense">₹{{ total_expense|floatformat:2 }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Net Flow</div>
+                    <div class="summary-value {% if net_flow >= 0 %}income{% else %}expense{% endif %}">
+                        {% if net_flow >= 0 %}+{% endif %}₹{{ net_flow|floatformat:2 }}
+                    </div>
+                </div>
+            </div>
+            
+            <form method="get" class="filter-bar">
+                <select name="type" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="expense">Expenses</option>
+                    <option value="income">Income</option>
+                </select>
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="date" name="start_date" class="form-control">
+                <input type="date" name="end_date" class="form-control">
+                <input type="text" name="search" class="form-control" placeholder="Search...">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="{% url 'transaction_history' %}" class="btn btn-outline-secondary">Clear</a>
+            </form>
+            
+            {% if transactions %}
+                <div class="tx-list">
+                    {% for tx in transactions %}
+                    <div class="tx-item">
+                        <div class="tx-icon" style="background: {{ tx.category.color|default:'#6B7280' }}20; color: {{ tx.category.color|default:'#6B7280' }};">
+                            <i class="bi {{ tx.category.icon|default:'bi-tag' }}"></i>
+                        </div>
+                        <div class="tx-details">
+                            <div class="tx-title">{{ tx.description|default:tx.category.name }}</div>
+                            <div class="tx-meta">
+                                <span class="type-badge {{ tx.transaction_type }}">{{ tx.transaction_type }}</span>
+                                <span>{{ tx.category.name }}</span>
+                                <span>{{ tx.account.name }}</span>
+                                <span>{{ tx.date|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+                        <div class="tx-amount {{ tx.transaction_type }}">
+                            {% if tx.transaction_type == 'expense' %}-{% else %}+{% endif %}₹{{ tx.amount|floatformat:2 }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-receipt"></i>
+                    <p>No transactions found</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}

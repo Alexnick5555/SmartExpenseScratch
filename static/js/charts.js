@@ -198,6 +198,35 @@ function initCategoryChart(data) {
             }
         }
     });
+    
+    // Create custom legend with colors
+    const legendContainer = document.getElementById('categoryLegend');
+    if (legendContainer) {
+        legendContainer.className = 'cat-legend';
+        legendContainer.innerHTML = labels.map((label, i) => {
+            const color = colors[i];
+            const value = values[i];
+            const total = values.reduce((a, b) => a + b, 0);
+            const percentage = ((value / total) * 100).toFixed(1);
+            return `<div class="category-legend-item">
+                <span class="category-legend-dot" style="background: ${color}"></span>
+                <span class="category-legend-label">${label}</span>
+                <span class="category-legend-value">₹${value.toLocaleString('en-IN')}</span>
+                <span class="category-legend-percent">${percentage}%</span>
+            </div>`;
+        }).join('');
+    }
+}
+
+function createLegendContainer(parent) {
+    if (!parent) return null;
+    let legend = parent.querySelector('.chart-legend');
+    if (!legend) {
+        legend = document.createElement('div');
+        legend.className = 'chart-legend';
+        parent.appendChild(legend);
+    }
+    return legend;
 }
 
 /**

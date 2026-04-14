@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initToastAutoClose();
     initNumberAnimations();
     initFormValidation();
+    initPasswordValidation();
 });
 
 /**
@@ -19,24 +20,45 @@ function initSidebar() {
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebarClose = document.getElementById('sidebarClose');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    // Toggle sidebar
+    const toggleSidebar = () => {
+        sidebar.classList.toggle('open');
+        sidebar.classList.toggle('active');
+        if (sidebarOverlay) sidebarOverlay.classList.toggle('active');
+    };
 
     if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('active');
-        });
+        sidebarToggle.addEventListener('click', toggleSidebar);
+    }
+    
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', toggleSidebar);
     }
 
     if (sidebarClose) {
-        sidebarClose.addEventListener('click', function() {
-            sidebar.classList.remove('active');
+        sidebarClose.addEventListener('click', () => {
+            sidebar.classList.remove('open', 'active');
+            if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+        });
+    }
+    
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('open', 'active');
+            sidebarOverlay.classList.remove('active');
         });
     }
 
     // Close sidebar on outside click (mobile)
     document.addEventListener('click', function(e) {
         if (window.innerWidth <= 991) {
-            if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
-                sidebar.classList.remove('active');
+            if (!sidebar.contains(e.target) && (!mobileMenuBtn || !mobileMenuBtn.contains(e.target))) {
+                sidebar.classList.remove('open', 'active');
+                if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+            }
             }
         }
     });
@@ -217,11 +239,94 @@ async function apiRequest(url, options = {}) {
     }
 }
 
+/**
+ * Password strength checker
+ */
+function checkPasswordStrength(password) {
+    let strength = 0;
+    const checks = [
+        { regex: /.{8,}/, score: 1 },
+        { regex: /[a-z]/, score: 1 },
+        { regex: /[A-Z]/, score: 1 },
+        { regex: /[0-9]/, score: 1 },
+        { regex: /[^a-zA-Z0-9]/, score: 1 }
+    ];
+    
+    checks.forEach(check => {
+        if (check.regex.test(password)) {
+            strength += check.score;
+        }
+    });
+    
+    return Math.min(strength, 5);
+}
+
+function updatePasswordStrengthUI(password) {
+    const bar = document.getElementById('passwordStrengthBar');
+    const text = document.getElementById('passwordStrengthText');
+    
+    if (!bar || !text) return;
+    
+    const strength = checkPasswordStrength(password);
+    const percentage = (strength / 5) * 100;
+    const colors = ['#dc3545', '#ffc107', '#ffc107', '#28a745', '#198754', '#198754'];
+    const labels = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
+    
+    bar.style.width = percentage + '%';
+    bar.style.backgroundColor = colors[strength];
+    bar.className = 'progress-bar' + (strength >= 3 ? ' bg-success' : strength >= 2 ? ' bg-warning' : ' bg-danger');
+    text.textContent = labels[strength] ? labels[strength] : '';
+    text.className = 'text-muted' + (strength >= 3 ? ' text-success' : strength >= 2 ? ' text-warning' : ' text-danger');
+}
+
+function validatePasswordMatch() {
+    const password1 = document.getElementById('id_password1') || document.querySelector('input[name="password1"]');
+    const password2 = document.getElementById('id_password2') || document.querySelector('input[name="password2"]');
+    const feedback = document.getElementById('passwordMatchFeedback');
+    
+    if (!password1 || !password2 || !feedback) return;
+    
+    if (password2.value && password1.value !== password2.value) {
+        feedback.textContent = 'Passwords do not match';
+        feedback.className = 'text-danger';
+        password2.setCustomValidity('Passwords do not match');
+    } else if (password2.value) {
+        feedback.textContent = 'Passwords match';
+        feedback.className = 'text-success';
+        password2.setCustomValidity('');
+    } else {
+        feedback.textContent = '';
+        password2.setCustomValidity('');
+    }
+}
+
+function initPasswordValidation() {
+    const password1 = document.getElementById('id_password1') || document.querySelector('input[name="password1"]');
+    const password2 = document.getElementById('id_password2') || document.querySelector('input[name="password2"]');
+    
+    if (password1) {
+        password1.addEventListener('input', function() {
+            updatePasswordStrengthUI(this.value);
+        });
+    }
+    
+    if (password2) {
+        password2.addEventListener('input', validatePasswordMatch);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    initPasswordValidation();
+});
+
 // Export functions for use in other scripts
 window.SmartExpense = {
     showToast,
     formatCurrency,
     formatDate,
     debounce,
-    apiRequest
+    apiRequest,
+    checkPasswordStrength,
+    updatePasswordStrengthUI,
+    validatePasswordMatch
 };

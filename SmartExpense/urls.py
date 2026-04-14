@@ -28,6 +28,7 @@ urlpatterns = [
     path('get-monthly-data/', expense_views.get_monthly_data, name='get_monthly_data'),
     path('smart-insights/', expense_views.smart_insights_api, name='smart_insights_api'),
     path('financial-calendar/', expense_views.financial_calendar, name='financial_calendar'),
+    path('transactions/', expense_views.transaction_history, name='transaction_history'),
     path('export-transactions/', expense_views.export_transactions, name='export_transactions'),
     path('spending-trends/', expense_views.spending_trends, name='spending_trends'),
     path('category-breakdown/', expense_views.category_breakdown, name='category_breakdown'),

@@ -62,6 +62,18 @@ class UserRegistrationForm(UserCreationForm):
         if commit:
             user.save()
         return user
+    
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username__iexact=username).exists():
+            raise forms.ValidationError('An account with this username already exists.')
+        return username
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError('An account with this email already exists.')
+        return email
 
 
 class UserLoginForm(AuthenticationForm):

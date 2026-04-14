@@ -329,7 +329,105 @@
         font-weight: 600;
         color: #1a1a2e;
     }
-        height: 280px;
+    
+    .chart-container {
+        position: relative;
+        height: 320px;
+    }
+    
+    .chart-legend-custom {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: #6B7280;
+        padding: 0.25rem 0.5rem;
+        background: #f9fafb;
+        border-radius: 6px;
+    }
+    
+    .legend-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        flex-shrink: 0;
+    }
+    
+    .legend-label {
+        font-weight: 500;
+        color: #374151;
+    }
+    
+    .legend-value {
+        font-family: var(--font-mono);
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+    
+.legend-box {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-top: 0.5rem;
+    }
+    
+    .cat-legend {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        max-height: 150px;
+        overflow-y: auto;
+        padding-right: 0.25rem;
+    }
+    
+    .cat-legend::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    .cat-legend::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 2px;
+    }
+    
+    .cat-legend .category-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.3rem 0.5rem;
+        background: #f8fafc;
+        border-radius: 6px;
+        font-size: 0.75rem;
+    }
+    
+    .cat-legend .category-legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        flex-shrink: 0;
+    }
+    
+    .cat-legend .category-legend-label {
+        flex: 1;
+        font-weight: 500;
+        color: #374151;
+    }
+    
+    .cat-legend .category-legend-value {
+        font-family: var(--font-mono);
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+    
+    .cat-legend .category-legend-percent {
+        font-size: 0.7rem;
+        color: #64748b;
     }
 
     /* Category List */
@@ -862,9 +960,10 @@
                 <div class="chart-header">
                     <h5 class="chart-title"><i class="bi bi-pie-chart"></i> Expenses by Category</h5>
                 </div>
-                <div class="chart-container" style="height: 280px;">
+                <div class="chart-container" style="height: 180px;">
                     <canvas id="categoryChart"></canvas>
                 </div>
+                <div class="cat-legend" id="categoryLegend"></div>
             </div>
         </div>
 
@@ -982,106 +1081,64 @@
         // Initialize charts (uses instances from charts.js)
         initTrendChart(monthlyData);
         initCategoryChart(categoryExpenses);
-        initQuickAdd();
-
-        // Voice button for quick-add form
-        if (typeof VoiceInput !== 'undefined') {
-            try {
-                const dashVoiceBtn = VoiceInput.createButton({
-                    categorySelector: '[name="category"]',
-                    mode: 'quick',
-                    formSelectors: {
-                        amountSelector: '[name="amount"]',
-                        categorySelector: '[name="category"]',
-                        descriptionSelector: '[name="description"]',
-                    },
-                    onTranscript: function(text) {
-                        SmartExpense.showToast('🎤 Heard: "' + text + '"', 'info');
-                    }
-                });
-                // Style override for dark quick-add section
-                if (dashVoiceBtn) {
-                    dashVoiceBtn.style.background = 'rgba(255,255,255,0.2)';
-                    dashVoiceBtn.style.boxShadow = 'none';
-                    dashVoiceBtn.style.border = '1px solid rgba(255,255,255,0.4)';
-                    const container = document.getElementById('dashVoiceBtnContainer');
-                    if (container) container.appendChild(dashVoiceBtn);
-                }
-            } catch (e) {
-                console.warn('Voice input not available:', e);
-            }
-        }
-
-        // ── Insights Refresh Button ──
-        const refreshBtn = document.getElementById('insightsRefreshBtn');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', async function () {
-                refreshBtn.classList.add('spinning');
+        
+        // Smart Insights refresh button
+        const insightsRefreshBtn = document.getElementById('insightsRefreshBtn');
+        if (insightsRefreshBtn) {
+            insightsRefreshBtn.addEventListener('click', async function() {
+                console.log('Refresh button clicked');
+                insightsRefreshBtn.classList.add('spinning');
                 try {
                     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+                    console.log('CSRF token:', csrfToken ? 'found' : 'not found');
                     if (!csrfToken) {
                         console.error('CSRF token not found');
-                        refreshBtn.classList.remove('spinning');
+                        SmartExpense.showToast('Refresh failed - no token', 'error');
                         return;
                     }
                     
                     const resp = await fetch('{% url "smart_insights_api" %}', {
+                        method: 'POST',
                         headers: { 
                             'X-CSRFToken': csrfToken.value,
                             'Content-Type': 'application/json'
                         }
                     });
                     
-                    if (!resp.ok) {
-                        throw new Error('API returned ' + resp.status);
-                    }
+                    console.log('Response status:', resp.status);
+                    if (!resp.ok) throw new Error('API returned ' + resp.status);
                     
                     const data = await resp.json();
+                    console.log('Response data:', data);
                     
-                    if (!data.insights) {
-                        console.error('Invalid API response:', data);
-                        return;
-                    }
-
-                    // Re-render insight chips
-                    const box = document.getElementById('insightsContainer');
-                    if (box) {
-                        box.innerHTML = data.insights.map((ins, i) => `
-                            <div class="insight-chip" style="background:${ins.bg};animation-delay:${i*100}ms">
-                                <i class="bi ${ins.icon} insight-icon" style="color:${ins.color}"></i>
-                                <span style="color:#374151">${ins.text}</span>
-                            </div>
-                        `).join('');
-                    }
-
-                    // Update forecast
-                    const fv = document.querySelector('.forecast-value');
-                    if (fv && data.forecast) fv.textContent = '₹' + Math.round(data.forecast).toLocaleString('en-IN');
-
-                    // Update health score
-                    if (data.health_score) {
-                        const hg = document.querySelector('.health-grade');
-                        const hv = document.querySelector('.health-score-val');
-                        const hl = document.querySelector('.health-label');
-                        const arc = document.querySelector('.health-gauge-wrap circle:last-child');
-                        if (hg) { hg.textContent = data.health_score.grade; hg.style.color = data.health_score.color; }
-                        if (hv) hv.textContent = data.health_score.score + '/100';
-                        if (hl) { hl.textContent = data.health_score.label; hl.style.color = data.health_score.color; }
-                        if (arc) {
-                            arc.setAttribute('stroke', data.health_score.color);
-                            arc.setAttribute('stroke-dasharray', data.health_score.dash + ' 351.9');
+                    if (data.insights) {
+                        const box = document.getElementById('insightsContainer');
+                        if (box) {
+                            box.innerHTML = data.insights.map((ins, i) => `
+                                <div class="insight-chip" style="background:${ins.bg};animation-delay:${i*100}ms">
+                                    <i class="bi ${ins.icon} insight-icon" style="color:${ins.color}"></i>
+                                    <span style="color:#374151">${ins.text}</span>
+                                </div>
+                            `).join('');
                         }
+                        
+                        const fv = document.querySelector('.forecast-value');
+                        if (fv && data.forecast) fv.textContent = '₹' + Math.round(data.forecast).toLocaleString('en-IN');
                     }
+                    
+                    SmartExpense.showToast('Insights refreshed', 'success');
                 } catch (e) {
-                    console.error('Insights refresh failed:', e);
+                    console.error('Failed to refresh insights:', e);
                     SmartExpense.showToast('Failed to refresh insights', 'error');
                 } finally {
-                    refreshBtn.classList.remove('spinning');
+                    insightsRefreshBtn.classList.remove('spinning');
                 }
             });
+        } else {
+            console.log('Refresh button not found');
         }
-
-        // ── Quick-add: auto-categorize from description ──
+        
+        // Quick-add: auto-categorize from description
         const descInput = document.querySelector('[name="description"]');
         const catSelect = document.querySelector('[name="category"]');
         if (descInput && catSelect) {
@@ -1097,42 +1154,5 @@
             });
         }
     });
-
-    function initQuickAdd() {
-        const form = document.getElementById('quickAddForm');
-        if (!form) return;
-        
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData(form);
-
-            try {
-                const response = await fetch('{% url "quick_add_expense" %}', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
-                    }
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    SmartExpense.showToast(data.message, 'success');
-                    form.reset();
-                    // Refresh charts and insights without full page reload
-                    await refreshChartData();
-                    // Also refresh insights
-                    document.getElementById('insightsRefreshBtn')?.click();
-                    // Update stats by reloading page after a short delay
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    SmartExpense.showToast(data.error || 'Failed to add expense', 'error');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                SmartExpense.showToast('An error occurred', 'error');
-            }
-        });
-    }
 </script>
 {% endblock %}

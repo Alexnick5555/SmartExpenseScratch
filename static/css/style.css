@@ -469,3 +469,410 @@ h1, h2, h3, h4, h5, h6 {
 .count-up {
     font-family: 'JetBrains Mono', monospace;
 }
+
+/* ============================================
+   RESPONSIVE STYLES - Mobile & Desktop
+   ============================================ */
+
+/* Desktop (default - larger screens) */
+@media (min-width: 992px) {
+    .sidebar {
+        transform: translateX(0);
+    }
+    
+    .sidebar-close {
+        display: none;
+    }
+    
+    .mobile-menu-btn {
+        display: none;
+    }
+    
+    .main-content, .main-header {
+        margin-left: var(--sidebar-width);
+    }
+}
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 991px) {
+    :root {
+        --sidebar-width: 220px;
+    }
+    
+    .sidebar {
+        width: var(--sidebar-width);
+    }
+    
+    .nav-link {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .nav-link i {
+        font-size: 1rem;
+    }
+}
+
+/* Mobile - Hide sidebar, show hamburger */
+@media (max-width: 991px) {
+    :root {
+        --sidebar-width: 0;
+    }
+    
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 280px;
+        height: 100vh;
+        transform: translateX(-100%);
+        z-index: 1050;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .sidebar-close {
+        display: block;
+    }
+    
+    .mobile-menu-btn {
+        display: flex !important;
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        z-index: 1040;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.6rem 0.75rem;
+        font-size: 1.25rem;
+        cursor: pointer;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .mobile-menu-btn .btn-text {
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .main-content, .main-header {
+        margin-left: 0 !important;
+        padding-top: 70px;
+    }
+    
+    .main-header {
+        left: 0;
+        padding: 0.75rem 1rem;
+        width: 100%;
+    }
+    
+    .header-content {
+        padding-left: 3rem;
+    }
+    
+    .content-area {
+        padding: 1rem;
+    }
+    
+    .page-card {
+        padding: 1rem;
+        border-radius: 12px;
+    }
+    
+    /* Stack grids on mobile */
+    .row {
+        flex-direction: column;
+    }
+    
+    .col-lg-7, .col-lg-5, .col-lg-6, .col-lg-4, .col-lg-3, .col-lg-8, .col-lg-9, .col-lg-12 {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    /* Smaller fonts on mobile */
+    h1, h2, h3 {
+        font-size: 1.25rem;
+    }
+    
+    h4, h5, h6 {
+        font-size: 1rem;
+    }
+    
+    .page-title {
+        font-size: 1.25rem;
+    }
+    
+    /* Form controls full width */
+    .form-control, .form-select {
+        width: 100%;
+    }
+    
+    .filter-bar {
+        flex-direction: column;
+    }
+    
+    .filter-bar > * {
+        width: 100%;
+    }
+    
+    /* Table responsive */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .data-table {
+        font-size: 0.85rem;
+    }
+    
+    .data-table th, .data-table td {
+        padding: 0.5rem;
+    }
+    
+    /* Quick add form stacked */
+    .quick-add-form {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .quick-add-form > div {
+        width: 100%;
+    }
+    
+    /* Dashboard grid */
+    .dashboard-content {
+        padding: 1rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .welcome-banner {
+        padding: 1.25rem;
+    }
+    
+    .welcome-banner h2 {
+        font-size: 1.25rem;
+    }
+    
+    .welcome-stats {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    /* Charts */
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-card {
+        padding: 1rem;
+    }
+    
+    .chart-container {
+        height: 200px !important;
+    }
+    
+    /* Modal fullscreen on mobile */
+    .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+        height: 100%;
+    }
+    
+    .modal-content {
+        border-radius: 0;
+        height: 100%;
+    }
+    
+    /* Calendar mobile */
+    .cal-page {
+        padding: 1rem;
+    }
+    
+    .cal-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .cal-day {
+        min-height: 60px;
+        padding: 0.25rem;
+    }
+    
+    .day-events {
+        display: none;
+    }
+    
+    .spend-dot {
+        display: none;
+    }
+    
+    /* Transactions list */
+    .tx-list {
+        gap: 0.5rem;
+    }
+    
+    .tx-item {
+        padding: 0.75rem;
+    }
+    
+    .tx-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+    
+    .tx-details {
+        min-width: 0;
+    }
+    
+    .tx-title {
+        font-size: 0.85rem;
+    }
+    
+    .tx-meta {
+        font-size: 0.7rem;
+        flex-wrap: wrap;
+    }
+    
+    .tx-amount {
+        font-size: 0.9rem;
+    }
+    
+    /* Summary cards */
+    .summary-cards {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    /* Reports */
+    .reports-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .breakdown-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .category-row {
+        flex-wrap: wrap;
+    }
+    
+    /* Budget cards */
+    .budget-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .goal-progress {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+/* Small mobile */
+@media (max-width: 576px) {
+    :root {
+        --header-height: 60px;
+    }
+    
+    .main-header {
+        padding: 0.5rem;
+    }
+    
+    .header-title {
+        font-size: 1rem;
+    }
+    
+    .page-card {
+        padding: 0.75rem;
+        border-radius: 8px;
+    }
+    
+    .btn {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+    }
+    
+    .btn-sm {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+    }
+    
+    .insight-chip {
+        font-size: 0.8rem;
+        padding: 0.5rem;
+    }
+    
+    .transaction-item {
+        padding: 0.5rem;
+    }
+    
+    .transaction-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+    
+    .transaction-details {
+        padding: 0 0.5rem;
+    }
+    
+    .transaction-title {
+        font-size: 0.85rem;
+    }
+    
+    .transaction-meta {
+        font-size: 0.7rem;
+    }
+    
+    .transaction-amount {
+        font-size: 0.85rem;
+    }
+}
+
+/* Sidebar overlay for mobile */
+@media (max-width: 991px) {
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1045;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+    }
+}
+
+/* Print styles */
+@media print {
+    .sidebar, .main-header, .mobile-menu-btn, .no-print {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .page-card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+}

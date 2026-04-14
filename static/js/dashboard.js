@@ -6,7 +6,46 @@
 document.addEventListener('DOMContentLoaded', function() {
     initDashboardCharts();
     initQuickExpenseForm();
+    initQuickAddVoice();
 });
+
+function initQuickAddVoice() {
+    if (typeof VoiceInput !== 'undefined') {
+        const btn = VoiceInput.createButton({
+            categorySelector: '[name="category"]',
+            mode: 'quick',
+            onResult: function(result) {
+                console.log('Voice result:', result);
+                const amountInput = document.querySelector('[name="amount"]');
+                const descInput = document.querySelector('[name="description"]');
+                const catSelect = document.querySelector('[name="category"]');
+                
+                if (result.amount && amountInput) {
+                    amountInput.value = result.amount;
+                    amountInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                if (result.description && descInput) {
+                    descInput.value = result.description;
+                    descInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                if (result.categoryValue && catSelect) {
+                    catSelect.value = result.categoryValue;
+                    catSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                if (result.amount || result.description) {
+                    SmartExpense.showToast('Voice input applied!', 'success');
+                }
+            }
+        });
+        const container = document.getElementById('dashVoiceBtnContainer');
+        if (container && btn) {
+            btn.style.background = 'rgba(255,255,255,0.2)';
+            btn.style.boxShadow = 'none';
+            btn.style.border = '1px solid rgba(255,255,255,0.4)';
+            container.appendChild(btn);
+        }
+    }
+}
 
 /**
  * Initialize dashboard-specific charts
@@ -22,10 +61,24 @@ function initQuickExpenseForm() {
     const form = document.getElementById('quickAddForm');
     if (!form) return;
 
+    let isSubmitting = false;
+
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
+        e.stopPropagation();
+
+        if (isSubmitting) {
+            console.log('Already submitting, ignoring duplicate');
+            return;
+        }
+        isSubmitting = true;
 
         const submitBtn = form.querySelector('button[type="submit"]');
+        if (!submitBtn) {
+            isSubmitting = false;
+            return;
+        }
+        
         const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Adding...';
         submitBtn.disabled = true;
@@ -45,19 +98,25 @@ function initQuickExpenseForm() {
             if (data.success) {
                 SmartExpense.showToast(data.message, 'success');
                 form.reset();
-                // Reload page after short delay to show updated data
                 setTimeout(() => {
-                    location.reload();
-                }, 1000);
+                    if (data.transaction_id) {
+                        window.location.href = window.location.pathname + '?added=' + data.transaction_id;
+                    } else {
+                        window.location.reload();
+                    }
+                }, 1200);
             } else {
                 SmartExpense.showToast(data.error || 'Failed to add expense', 'error');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                isSubmitting = false;
             }
         } catch (error) {
             console.error('Error:', error);
             SmartExpense.showToast('An error occurred. Please try again.', 'error');
-        } finally {
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
+            isSubmitting = false;
         }
     });
 }
@@ -71,9 +130,7 @@ function startAutoRefresh(interval = 60000) {
             const response = await fetch('/get-monthly-data/?months=6');
             const data = await response.json();
 
-            // Update charts if data changed
             if (data && data.length > 0) {
-                // Trigger chart update
                 window.dispatchEvent(new CustomEvent('dashboardDataUpdated', { detail: data }));
             }
         } catch (error) {

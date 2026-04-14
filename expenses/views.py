@@ -185,7 +185,8 @@ def register(request):
             return redirect('dashboard')
     else:
         form = UserRegistrationForm()
-    return render(request, 'auth/register.html', {'form': form})
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    return render(request, 'auth/register.html', {'form': form, 'is_ajax': is_ajax})
 
 
 def user_login(request):
@@ -436,6 +437,9 @@ def expense_edit(request, pk):
 def expense_delete(request, pk):
     """Delete expense."""
     expense = get_object_or_404(Transaction, pk=pk, user=request.user)
+    if expense.account:
+        expense.account.balance += expense.amount
+        expense.account.save()
     expense.delete()
     messages.success(request, 'Expense deleted successfully!')
     return redirect('expense_list')
@@ -504,6 +508,9 @@ def income_edit(request, pk):
 def income_delete(request, pk):
     """Delete income."""
     income = get_object_or_404(Transaction, pk=pk, user=request.user)
+    if income.account:
+        income.account.balance -= income.amount
+        income.account.save()
     income.delete()
     messages.success(request, 'Income deleted successfully!')
     return redirect('income_list')
@@ -983,10 +990,21 @@ def quick_add_expense(request):
             description = form.cleaned_data['description']
             category = form.cleaned_data.get('category')
 
-            # Get default account
             account = Account.objects.filter(user=request.user, is_active=True).first()
             if not account:
                 return JsonResponse({'success': False, 'error': 'No account found'}, status=400)
+
+            recent_same = Transaction.objects.filter(
+                user=request.user,
+                account=account,
+                amount=amount,
+                description=description,
+                transaction_type='expense',
+                created_at__gte=timezone.now() - timedelta(seconds=3)
+            ).exists()
+            
+            if recent_same:
+                return JsonResponse({'success': False, 'error': 'Duplicate transaction detected'}, status=400)
 
             transaction = Transaction.objects.create(
                 user=request.user,
@@ -1064,8 +1082,9 @@ def financial_calendar(request):
             'icon': 'bi-flag-fill', 'color': '#7C3AED', 'bg': '#F5F3FF',
         })
 
-    # Daily transaction totals
+    # Daily transaction totals and list
     tx_by_day = {}
+    tx_list_by_day = {}
     for tx in Transaction.objects.filter(
         user=user, date__gte=month_start, date__lte=month_end
     ).values('date').annotate(
@@ -1073,11 +1092,18 @@ def financial_calendar(request):
         income=Sum('amount',  filter=Q(transaction_type='income')),
         count=Count('id')
     ):
-        tx_by_day[tx['date'].day] = {
+        day = tx['date'].day
+        tx_by_day[day] = {
             'expense': float(tx['expense'] or 0),
             'income':  float(tx['income']  or 0),
             'count':   tx['count'],
         }
+        tx_list_by_day[day] = list(Transaction.objects.filter(
+            user=user, date=tx['date']
+        ).select_related('category', 'account').order_by('-created_at').values(
+            'id', 'amount', 'transaction_type', 'description', 
+            'category__name', 'category__color', 'category__icon'
+        ))
 
     # ── Build calendar grid ───────────────────────────────────────────────────
     # calendar.monthcalendar returns weeks; 0 = day outside the month
@@ -1092,6 +1118,7 @@ def financial_calendar(request):
                     'day':      day,
                     'events':   events.get(day, []),
                     'tx':       tx_by_day.get(day),
+                    'tx_list':  tx_list_by_day.get(day, []),
                     'is_today': (day == today.day and month == today.month and year == today.year),
                 })
         calendar_grid.append(week_days)
@@ -1225,6 +1252,45 @@ def get_monthly_data(request):
         })
 
     return JsonResponse(data, safe=False)
+
+
+@login_required
+def transaction_history(request):
+    """Show all transactions with filtering."""
+    user = request.user
+    transactions = Transaction.objects.filter(user=user).select_related('category', 'account').order_by('-date', '-created_at')
+    
+    tx_type = request.GET.get('type')
+    category_id = request.GET.get('category')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    search = request.GET.get('search')
+    
+    if tx_type:
+        transactions = transactions.filter(transaction_type=tx_type)
+    if category_id:
+        transactions = transactions.filter(category_id=category_id)
+    if start_date:
+        transactions = transactions.filter(date__gte=start_date)
+    if end_date:
+        transactions = transactions.filter(date__lte=end_date)
+    if search:
+        transactions = transactions.filter(description__icontains=search)
+    
+    total_expense = transactions.filter(transaction_type='expense').aggregate(Sum('amount'))['amount__sum'] or Decimal('0')
+    total_income = transactions.filter(transaction_type='income').aggregate(Sum('amount'))['amount__sum'] or Decimal('0')
+    
+    categories = Category.objects.filter(is_active=True)
+    total_count = transactions.count()
+    
+    return render(request, 'transactions/transaction_list.html', {
+        'transactions': transactions[:100],
+        'total_expense': total_expense,
+        'total_income': total_income,
+        'net_flow': total_income - total_expense,
+        'total_count': total_count,
+        'categories': categories,
+    })
 
 
 @login_required
