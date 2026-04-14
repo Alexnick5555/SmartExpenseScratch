@@ -27,6 +27,7 @@
     {% if request.user.is_authenticated %}
         {% include 'includes/sidebar.html' %}
         {% include 'includes/header.html' %}
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
     {% endif %}
 
     {% if messages %}
