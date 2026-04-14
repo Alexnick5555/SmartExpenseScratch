@@ -49,7 +49,7 @@ h1, h2, h3, h4, h5, h6 {
     height: 100vh;
     background: white;
     box-shadow: 2px 0 20px rgba(0, 0, 0, 0.05);
-    z-index: 1000;
+    z-index: 1050;
     display: flex;
     flex-direction: column;
     transition: transform 0.3s ease;
@@ -419,12 +419,13 @@ h1, h2, h3, h4, h5, h6 {
     }
 
     .sidebar {
-        transform: translateX(-100%);
+        transform: translateX(-100%) !important;
         width: 260px;
+        left: 0;
     }
 
     .sidebar.active {
-        transform: translateX(0);
+        transform: translateX(0) !important;
     }
 
     .sidebar-close {
@@ -442,6 +443,8 @@ h1, h2, h3, h4, h5, h6 {
 
     .sidebar-toggle {
         display: block;
+        z-index: 1100;
+        position: relative;
     }
 }
 
@@ -719,7 +722,7 @@ h1, h2, h3, h4, h5, h6 {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 1045;
+    z-index: 1049;
 }
 
 .sidebar-overlay.active {

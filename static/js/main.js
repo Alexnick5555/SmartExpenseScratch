@@ -20,12 +20,12 @@ function initSidebar() {
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebarClose = document.getElementById('sidebarClose');
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
 
     // Toggle sidebar
-    const toggleSidebar = () => {
-        sidebar.classList.toggle('open');
+    const toggleSidebar = (e) => {
+        if (e) e.preventDefault();
+        e.stopPropagation();
         sidebar.classList.toggle('active');
         if (sidebarOverlay) sidebarOverlay.classList.toggle('active');
     };
@@ -34,34 +34,22 @@ function initSidebar() {
         sidebarToggle.addEventListener('click', toggleSidebar);
     }
     
-    if (mobileMenuBtn) {
-        mobileMenuBtn.addEventListener('click', toggleSidebar);
-    }
-
     if (sidebarClose) {
-        sidebarClose.addEventListener('click', () => {
-            sidebar.classList.remove('open', 'active');
+        sidebarClose.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            sidebar.classList.remove('active');
             if (sidebarOverlay) sidebarOverlay.classList.remove('active');
         });
     }
     
     if (sidebarOverlay) {
-        sidebarOverlay.addEventListener('click', () => {
-            sidebar.classList.remove('open', 'active');
+        sidebarOverlay.addEventListener('click', (e) => {
+            e.preventDefault();
+            sidebar.classList.remove('active');
             sidebarOverlay.classList.remove('active');
         });
     }
-
-    // Close sidebar on outside click (mobile)
-    document.addEventListener('click', function(e) {
-        if (window.innerWidth <= 991) {
-            if (!sidebar.contains(e.target) && (!mobileMenuBtn || !mobileMenuBtn.contains(e.target))) {
-                sidebar.classList.remove('open', 'active');
-                if (sidebarOverlay) sidebarOverlay.classList.remove('active');
-            }
-            }
-        }
-    });
 }
 
 /**
