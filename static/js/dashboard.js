@@ -96,15 +96,16 @@ function initQuickExpenseForm() {
             const data = await response.json();
 
             if (data.success) {
-                SmartExpense.showToast(data.message, 'success');
+                SmartExpense.showToast(data.message || 'Expense added successfully!', 'success');
                 form.reset();
+                // Reset button state before reload
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                isSubmitting = false;
+                // Reload after short delay
                 setTimeout(() => {
-                    if (data.transaction_id) {
-                        window.location.href = window.location.pathname + '?added=' + data.transaction_id;
-                    } else {
-                        window.location.reload();
-                    }
-                }, 1200);
+                    window.location.reload();
+                }, 800);
             } else {
                 SmartExpense.showToast(data.error || 'Failed to add expense', 'error');
                 submitBtn.innerHTML = originalText;
