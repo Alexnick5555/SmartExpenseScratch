@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Accounts - SmartExpense{% endblock %}
+{% block page_title %}Accounts{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content { margin-left: 260px; padding-top: 80px; min-height: 100vh; }
+    .content-area { padding: 2rem; }
+    .page-card { background: white; border-radius: 16px; padding: 1.5rem; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; }
+    .account-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+    .account-card { background: #F9FAFB; border-radius: 16px; padding: 1.5rem; transition: all 0.3s; }
+    .account-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+    .account-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; }
+    .account-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .account-balance { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .account-name { font-weight: 600; font-size: 1.1rem; }
+    .account-type { color: #6B7280; font-size: 0.9rem; }
+    .account-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+    .action-btn { padding: 0.4rem 0.75rem; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; font-size: 0.85rem; }
+    .action-btn.edit { background: rgba(21, 101, 192, 0.1); color: #1565C0; }
+    .action-btn.delete { background: rgba(229, 57, 53, 0.1); color: #E53935; }
+    @media (max-width: 991px) { .main-content { margin-left: 0; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="content-area">
+        <div class="page-card">
+            <div class="page-header">
+                <h2 class="page-title"><i class="bi bi-bank me-2"></i>Accounts</h2>
+                <a href="{% url 'account_add' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-2"></i>Add Account</a>
+            </div>
+
+            <div class="account-grid">
+                {% for account in accounts %}
+                    <div class="account-card">
+                        <div class="account-header">
+                            <div class="account-icon" style="background: rgba(46, 125, 50, 0.1); color: #2E7D32;">
+                                <i class="bi bi-{% if account.account_type == 'cash' %}cash{% elif account.account_type == 'savings' %}bank{% elif account.account_type == 'credit_card' %}credit-card{% elif account.account_type == 'investment' %}graph-up{% else %}wallet2{% endif %}"></i>
+                            </div>
+                            <span class="badge bg-{% if account.is_active %}success{% else %}secondary{% endif %}">{{ account.get_account_type_display }}</span>
+                        </div>
+                        <div class="account-balance {% if account.balance < 0 %}text-danger{% endif %}">₹{{ account.balance|floatformat:2 }}</div>
+                        <div class="account-name">{{ account.name }}</div>
+                        <div class="account-type">{{ account.get_account_type_display }}</div>
+                        <div class="account-actions">
+                            <a href="{% url 'account_edit' account.pk %}" class="action-btn edit"><i class="bi bi-pencil me-1"></i>Edit</a>
+                            <a href="{% url 'account_delete' account.pk %}" class="action-btn delete" onclick="return confirm('Are you sure?')"><i class="bi bi-trash me-1"></i>Delete</a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center py-5 w-100">
+                        <i class="bi bi-bank" style="font-size: 4rem; opacity: 0.3;"></i>
+                        <p class="mt-3 text-muted">No accounts yet</p>
+                        <a href="{% url 'account_add' %}" class="btn btn-primary">Add Your First Account</a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

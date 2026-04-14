@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reports - SmartExpense{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content { margin-left: 260px; padding-top: 80px; min-height: 100vh; }
+    .content-area { padding: 2rem; }
+    .page-card { background: white; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; }
+    .chart-container { position: relative; height: 300px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .summary-item { background: linear-gradient(135deg, var(--primary), #1B5E20); color: white; padding: 1.5rem; border-radius: 12px; text-align: center; }
+    .summary-item.blue { background: linear-gradient(135deg, #1565C0, #0D47A1); }
+    .summary-item.orange { background: linear-gradient(135deg, #FF6F00, #E65100); }
+    .summary-value { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 600; }
+    .summary-label { opacity: 0.9; }
+    .category-row { display: flex; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #F3F4F6; }
+    .category-row:last-child { border-bottom: none; }
+    .category-dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 1rem; }
+    .category-name { flex: 1; font-weight: 500; }
+    .category-amount { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+    .category-percent { width: 50px; text-align: right; color: #6B7280; }
+    @media (max-width: 991px) { .main-content { margin-left: 0; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="content-area">
+        <div class="page-card">
+            <div class="page-header">
+                <h2 class="page-title"><i class="bi bi-bar-chart me-2"></i>Financial Reports</h2>
+                <div class="d-flex gap-2">
+                    <form method="get" class="d-flex gap-2">
+                        <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+                        <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+                        <button type="submit" class="btn btn-primary">Apply</button>
+                    </form>
+                    <a href="{% url 'export_csv' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-download me-2"></i>Export CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-value">₹{{ total_income|floatformat:0 }}</div>
+                    <div class="summary-label">Total Income</div>
+                </div>
+                <div class="summary-item blue">
+                    <div class="summary-value">₹{{ total_expense|floatformat:0 }}</div>
+                    <div class="summary-label">Total Expenses</div>
+                </div>
+                <div class="summary-item orange">
+                    <div class="summary-value {% if net_savings < 0 %}text-warning{% endif %}">₹{{ net_savings|floatformat:0 }}</div>
+                    <div class="summary-label">Net Savings</div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <h5 class="mb-3">Expense Breakdown</h5>
+                    {% for item in expense_by_category %}
+                        <div class="category-row">
+                            <div class="category-dot" style="background: {{ item.category_color }};"></div>
+                            <div class="category-name">{{ item.category__name }}</div>
+                            <div class="category-amount">₹{{ item.total|floatformat:0 }}</div>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">No expense data</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Income Sources</h5>
+                    {% for item in income_by_category %}
+                        <div class="category-row">
+                            <div class="category-dot" style="background: {{ item.category_color }};"></div>
+                            <div class="category-name">{{ item.category__name }}</div>
+                            <div class="category-amount">₹{{ item.total|floatformat:0 }}</div>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">No income data</p>
+                    {% endfor %}
+                </div>
+                <div class="col-lg-6">
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="incomeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    const dailyTransactions = {{ daily_transactions|safe }};
+    const expenseByCategory = {{ expense_by_category|safe }};
+    const incomeByCategory = {{ income_by_category|safe }};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initReportCharts(dailyTransactions, expenseByCategory, incomeByCategory);
+    });
+</script>
+{% endblock %}

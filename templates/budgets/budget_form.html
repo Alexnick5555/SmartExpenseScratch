@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - SmartExpense{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content { margin-left: 260px; padding-top: 80px; min-height: 100vh; }
+    .content-area { padding: 2rem; max-width: 500px; margin: 0 auto; }
+    .page-card { background: white; border-radius: 16px; padding: 2rem; }
+    @media (max-width: 991px) { .main-content { margin-left: 0; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="content-area">
+        <div class="page-card">
+            <h2 class="page-title mb-4"><i class="bi bi-pie-chart me-2"></i>{{ title }}</h2>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Category</label>
+                    {{ form.category }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Budget Amount (₹)</label>
+                    {{ form.amount }}
+                </div>
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <label class="form-label">Month</label>
+                        <input type="number" name="month" class="form-control" value="{{ month }}" min="1" max="12">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Year</label>
+                        <input type="number" name="year" class="form-control" value="{{ year }}" min="2020">
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-2"></i>Save Budget</button>
+                    <a href="{% url 'budget_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock %}

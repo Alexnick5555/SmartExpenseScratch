@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Income - SmartExpense{% endblock %}
+{% block page_title %}Income{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content { margin-left: 260px; padding-top: 80px; min-height: 100vh; }
+    .content-area { padding: 2rem; }
+    .page-card { background: white; border-radius: 16px; padding: 1.5rem; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; }
+    .data-table { width: 100%; }
+    .data-table th { background: #F9FAFB; padding: 1rem; text-align: left; font-weight: 600; border-bottom: 2px solid #E5E7EB; }
+    .data-table td { padding: 1rem; border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
+    .data-table tr:hover { background: #F9FAFB; }
+    .category-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.75rem; border-radius: 50px; font-size: 0.85rem; }
+    .amount-value { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+    .amount-income { color: #43A047; }
+    .action-btns { display: flex; gap: 0.5rem; }
+    .action-btn { padding: 0.4rem 0.75rem; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; }
+    .action-btn.edit { background: rgba(21, 101, 192, 0.1); color: #1565C0; }
+    .action-btn.delete { background: rgba(229, 57, 53, 0.1); color: #E53935; }
+    .action-btn:hover { transform: scale(1.05); }
+    @media (max-width: 991px) { .main-content { margin-left: 0; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="content-area">
+        <div class="page-card">
+            <div class="page-header">
+                <h2 class="page-title"><i class="bi bi-arrow-up-circle me-2"></i>Income</h2>
+                <a href="{% url 'income_add' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-2"></i>Add Income</a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Account</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for income in transactions %}
+                            <tr>
+                                <td>{{ income.date|date:"M d, Y" }}</td>
+                                <td>{{ income.description|truncatechars:40|default:"-" }}</td>
+                                <td>
+                                    <span class="category-badge" style="background: {{ income.category.color|default:'#43A047' }}20; color: {{ income.category.color|default:'#43A047' }};">
+                                        <i class="bi {{ income.category.icon|default:'bi-tag' }}"></i>
+                                        {{ income.category.name|default:"Uncategorized" }}
+                                    </span>
+                                </td>
+                                <td>{{ income.account.name|default:"-" }}</td>
+                                <td class="text-end amount-value amount-income">+₹{{ income.amount|floatformat:2 }}</td>
+                                <td class="text-center">
+                                    <div class="action-btns">
+                                        <a href="{% url 'income_edit' income.pk %}" class="action-btn edit" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'income_delete' income.pk %}" class="action-btn delete" title="Delete" onclick="return confirm('Are you sure?')">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <i class="bi bi-cash-stack" style="font-size: 3rem; opacity: 0.3;"></i>
+                                    <p class="mt-2 text-muted">No income recorded yet</p>
+                                    <a href="{% url 'income_add' %}" class="btn btn-primary btn-sm">Add First Income</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

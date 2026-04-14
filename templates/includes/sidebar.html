@@ -1,0 +1,103 @@
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <a href="{% url 'dashboard' %}" class="sidebar-logo">
+            <i class="bi bi-wallet2"></i>
+            <span>SmartExpense</span>
+        </a>
+        <button class="sidebar-close" id="sidebarClose">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+
+    <nav class="sidebar-nav">
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="bi bi-grid-1x2"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'expense_list' %}" class="nav-link {% if '/expenses' in request.path %}active{% endif %}">
+                    <i class="bi bi-arrow-down-circle"></i>
+                    <span>Expenses</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'income_list' %}" class="nav-link {% if '/income' in request.path %}active{% endif %}">
+                    <i class="bi bi-arrow-up-circle"></i>
+                    <span>Income</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'account_list' %}" class="nav-link {% if '/accounts' in request.path %}active{% endif %}">
+                    <i class="bi bi-bank"></i>
+                    <span>Accounts</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'subscription_list' %}" class="nav-link {% if '/subscriptions' in request.path %}active{% endif %}">
+                    <i class="bi bi-repeat"></i>
+                    <span>Subscriptions</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'budget_list' %}" class="nav-link {% if '/budgets' in request.path %}active{% endif %}">
+                    <i class="bi bi-pie-chart"></i>
+                    <span>Budgets</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'savings_goal_list' %}" class="nav-link {% if '/savings-goals' in request.path %}active{% endif %}">
+                    <i class="bi bi-flag"></i>
+                    <span>Savings Goals</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'reports' %}" class="nav-link {% if '/reports' in request.path %}active{% endif %}">
+                    <i class="bi bi-bar-chart"></i>
+                    <span>Reports</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'financial_calendar' %}" class="nav-link {% if '/financial-calendar' in request.path %}active{% endif %}">
+                    <i class="bi bi-calendar3"></i>
+                    <span>Calendar</span>
+                    {% if bill_reminders %}
+                    <span style="background:#EF4444;color:white;border-radius:50%;width:18px;height:18px;font-size:0.7rem;display:inline-flex;align-items:center;justify-content:center;margin-left:auto;font-weight:700">
+                        {{ bill_reminders|length }}
+                    </span>
+                    {% endif %}
+                </a>
+            </li>
+        </ul>
+
+        <div class="nav-divider"></div>
+
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="{% url 'profile' %}" class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                    <i class="bi bi-person"></i>
+                    <span>Profile</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'settings' %}" class="nav-link {% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
+                    <i class="bi bi-gear"></i>
+                    <span>Settings</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'logout' %}" class="nav-link">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+        <p>Developed by</p>
+        <p class="developer-names">Nitish Mishra & Nishant Singh</p>
+    </div>
+</aside>

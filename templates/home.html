@@ -1,0 +1,648 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}SmartExpense - Personal Expense & Subscription Tracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #2E7D32;
+        --secondary: #1565C0;
+        --accent: #FF6F00;
+        --success: #43A047;
+        --danger: #E53935;
+        --bg-light: #F5F7FA;
+        --text-dark: #1A1A2E;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background: var(--bg-light);
+        color: var(--text-dark);
+        overflow-x: hidden;
+    }
+
+    /* Navbar */
+    .navbar {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 1rem 2rem;
+        box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+    }
+
+    .navbar-brand {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: var(--primary) !important;
+    }
+
+    .navbar-brand i {
+        margin-right: 0.5rem;
+    }
+
+    .nav-link {
+        font-weight: 500;
+        color: var(--text-dark) !important;
+        margin: 0 0.5rem;
+        transition: color 0.3s;
+    }
+
+    .nav-link:hover {
+        color: var(--primary) !important;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+        background: #256629;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(46, 125, 50, 0.3);
+    }
+
+    .btn-outline-primary {
+        border-color: var(--primary);
+        color: var(--primary);
+        padding: 0.6rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    /* Hero Section */
+    .hero {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #E8F5E9 0%, #BBDEFB 50%, #FFF3E0 100%);
+        display: flex;
+        align-items: center;
+        padding: 6rem 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 80%;
+        height: 150%;
+        background: radial-gradient(circle, rgba(46, 125, 50, 0.1) 0%, transparent 70%);
+        animation: pulse 8s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero h1 {
+        font-family: 'Poppins', sans-serif;
+        font-size: 3.5rem;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 1.5rem;
+        color: var(--text-dark);
+    }
+
+    .hero h1 span {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero p {
+        font-size: 1.25rem;
+        color: #6B7280;
+        margin-bottom: 2rem;
+        max-width: 500px;
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 3rem;
+        margin-top: 3rem;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-family: 'Poppins', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6B7280;
+    }
+
+    /* Floating Cards Animation */
+    .hero-visual {
+        position: relative;
+    }
+
+    .floating-card {
+        position: absolute;
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .floating-card:nth-child(1) {
+        top: 10%;
+        left: 0;
+        animation-delay: 0s;
+    }
+
+    .floating-card:nth-child(2) {
+        top: 40%;
+        right: 0;
+        animation-delay: 2s;
+    }
+
+    .floating-card:nth-child(3) {
+        bottom: 10%;
+        left: 10%;
+        animation-delay: 4s;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+
+    .mini-stat {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .mini-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .mini-icon.green { background: #E8F5E9; color: var(--primary); }
+    .mini-icon.blue { background: #E3F2FD; color: var(--secondary); }
+    .mini-icon.orange { background: #FFF3E0; color: var(--accent); }
+
+    .mini-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+
+    .mini-label {
+        font-size: 0.85rem;
+        color: #6B7280;
+    }
+
+    /* Features Section */
+    .features {
+        padding: 6rem 2rem;
+        background: white;
+    }
+
+    .section-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .section-subtitle {
+        text-align: center;
+        color: #6B7280;
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin: 0 auto 4rem;
+    }
+
+    .feature-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        transition: all 0.3s;
+        border: 1px solid #E5E7EB;
+        height: 100%;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        border-color: var(--primary);
+    }
+
+    .feature-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+    }
+
+    .feature-card h3 {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .feature-card p {
+        color: #6B7280;
+        line-height: 1.7;
+    }
+
+    /* CTA Section */
+    .cta-section {
+        padding: 6rem 2rem;
+        background: linear-gradient(135deg, var(--primary), #1B5E20);
+        color: white;
+        text-align: center;
+    }
+
+    .cta-section h2 {
+        font-family: 'Poppins', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .cta-section p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+    }
+
+    .btn-white {
+        background: white;
+        color: var(--primary);
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s;
+    }
+
+    .btn-white:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    /* Footer */
+    footer {
+        background: var(--text-dark);
+        color: white;
+        padding: 4rem 2rem 2rem;
+    }
+
+    .footer-brand {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 1rem;
+    }
+
+    .footer-text {
+        color: rgba(255,255,255,0.7);
+        max-width: 300px;
+    }
+
+    .footer-title {
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: white;
+    }
+
+    .footer-links {
+        list-style: none;
+        padding: 0;
+    }
+
+    .footer-links li {
+        margin-bottom: 0.75rem;
+    }
+
+    .footer-links a {
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+
+    .footer-links a:hover {
+        color: var(--primary);
+    }
+
+    .footer-bottom {
+        border-top: 1px solid rgba(255,255,255,0.1);
+        margin-top: 3rem;
+        padding-top: 2rem;
+        text-align: center;
+        color: rgba(255,255,255,0.5);
+    }
+
+    /* Auth Section */
+    .auth-section {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #E8F5E9 0%, #BBDEFB 50%, #FFF3E0 100%);
+        padding: 2rem;
+    }
+
+    .auth-card {
+        background: white;
+        border-radius: 24px;
+        padding: 3rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 450px;
+    }
+
+    .auth-logo {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .auth-logo i {
+        font-size: 3rem;
+        color: var(--primary);
+    }
+
+    .auth-logo h2 {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-top: 0.5rem;
+    }
+
+    .auth-logo p {
+        color: #6B7280;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.25rem rgba(46, 125, 50, 0.15);
+    }
+
+    /* Responsive */
+    @media (max-width: 991px) {
+        .hero h1 {
+            font-size: 2.5rem;
+        }
+
+        .hero-stats {
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .hero-visual {
+            display: none;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .hero h1 {
+            font-size: 2rem;
+        }
+
+        .auth-card {
+            padding: 2rem 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'home' %}">
+            <i class="bi bi-wallet2"></i> SmartExpense
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+                <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+                {% if request.user.is_authenticated %}
+                    <li class="nav-item"><a class="btn btn-primary ms-3" href="{% url 'dashboard' %}">Dashboard</a></li>
+                {% else %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
+                    <li class="nav-item"><a class="btn btn-primary ms-3" href="{% url 'register' %}">Get Started</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 hero-content">
+                <h1>Take Control of Your <span>Finances</span> with SmartExpense</h1>
+                <p>Track expenses, manage subscriptions, set budgets, and achieve your financial goals. All in one powerful, easy-to-use app.</p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="{% url 'register' %}" class="btn btn-primary btn-lg">Start Free Today</a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">Login</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">10+</div>
+                        <div class="stat-label">Expense Categories</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">₹</div>
+                        <div class="stat-label">INR Support</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">100%</div>
+                        <div class="stat-label">Secure & Private</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 hero-visual d-none d-lg-block">
+                <div class="floating-card">
+                    <div class="mini-stat">
+                        <div class="mini-icon green"><i class="bi bi-arrow-down"></i></div>
+                        <div>
+                            <div class="mini-value">₹45,230</div>
+                            <div class="mini-label">This Month's Expenses</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="floating-card">
+                    <div class="mini-stat">
+                        <div class="mini-icon blue"><i class="bi bi-arrow-up"></i></div>
+                        <div>
+                            <div class="mini-value">₹85,000</div>
+                            <div class="mini-label">This Month's Income</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="floating-card">
+                    <div class="mini-stat">
+                        <div class="mini-icon orange"><i class="bi bi-pie-chart"></i></div>
+                        <div>
+                            <div class="mini-value">47%</div>
+                            <div class="mini-label">Savings Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features" id="features">
+    <div class="container">
+        <h2 class="section-title">Powerful Features</h2>
+        <p class="section-subtitle">Everything you need to manage your personal finances effectively</p>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-lightning"></i></div>
+                    <h3>Quick Expense Entry</h3>
+                    <p>Add expenses in under 3 seconds with our lightning-fast input form. No more fumbling through multiple screens.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-bank"></i></div>
+                    <h3>Multi-Account Tracking</h3>
+                    <p>Manage all your accounts in one place - savings, credit cards, investments, and cash. Get your complete net worth at a glance.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-repeat"></i></div>
+                    <h3>Subscription Manager</h3>
+                    <p>Track all your recurring payments - Netflix, Spotify, rent, SIPs. Never miss a payment or forget a subscription again.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-pie-chart"></i></div>
+                    <h3>Smart Budgeting</h3>
+                    <p>Set monthly budgets for different categories and get alerts when you're approaching your limits. Stay on track financially.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-bar-chart"></i></div>
+                    <h3>Visual Reports</h3>
+                    <p>Beautiful charts and graphs showing your spending patterns, trends over time, and insights to help you save more.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-flag"></i></div>
+                    <h3>Savings Goals</h3>
+                    <p>Set financial goals like vacation, emergency fund, or new gadget. Track progress and celebrate when you achieve them.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="cta-section" id="about">
+    <div class="container">
+        <h2>Built for Indian Users</h2>
+        <p>Designed with INR support, Indian payment habits, and local financial tools in mind. Made by students, for everyone.</p>
+        <div class="mt-4">
+            <p class="mb-2" style="opacity: 0.8;">Developed by</p>
+            <h4 class="mb-0">Nitish Mishra & Nishant Singh</h4>
+            <p class="mt-2" style="opacity: 0.7;">College Project</p>
+        </div>
+        <a href="{% url 'register' %}" class="btn-white mt-4">Get Started Now - It's Free!</a>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="footer-brand"><i class="bi bi-wallet2"></i> SmartExpense</div>
+                <p class="footer-text">Your personal finance companion. Track expenses, manage subscriptions, and achieve your financial goals.</p>
+            </div>
+            <div class="col-lg-2 col-md-4 mb-4">
+                <h5 class="footer-title">Product</h5>
+                <ul class="footer-links">
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#">Pricing</a></li>
+                    <li><a href="#">Mobile App</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-2 col-md-4 mb-4">
+                <h5 class="footer-title">Company</h5>
+                <ul class="footer-links">
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Careers</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-2 col-md-4 mb-4">
+                <h5 class="footer-title">Legal</h5>
+                <ul class="footer-links">
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Security</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 SmartExpense. Developed by Nitish Mishra & Nishant Singh.</p>
+        </div>
+    </div>
+</footer>
+{% endblock %}

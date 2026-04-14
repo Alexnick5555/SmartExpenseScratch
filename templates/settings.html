@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Settings - SmartExpense{% endblock %}
+{% block page_title %}Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content { margin-left: 260px; padding-top: 80px; min-height: 100vh; }
+    .content-area { padding: 2rem; }
+    .page-card { background: white; border-radius: 16px; padding: 2rem; max-width: 800px; margin: 0 auto; }
+    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; }
+    .settings-section { margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #E5E7EB; }
+    .settings-section:last-child { border-bottom: none; margin-bottom: 0; }
+    .settings-section h5 { font-weight: 600; margin-bottom: 1rem; color: var(--primary); }
+    .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; }
+    .setting-info h6 { margin: 0; font-weight: 500; }
+    .setting-info p { margin: 0; font-size: 0.9rem; color: #6B7280; }
+    .inline-edit { display: flex; gap: 0.5rem; align-items: center; }
+    .inline-edit input { flex: 1; max-width: 200px; }
+    @media (max-width: 991px) { .main-content { margin-left: 0; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="content-area">
+        <div class="page-card">
+            <h2 class="page-title"><i class="bi bi-gear me-2"></i>Settings</h2>
+
+            <div class="settings-section">
+                <h5><i class="bi bi-person me-2"></i>Account</h5>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6>Username</h6>
+                        <p id="usernameDisplay">{{ request.user.username }}</p>
+                    </div>
+                    <div class="inline-edit">
+                        <input type="text" class="form-control form-control-sm" id="usernameInput" value="{{ request.user.username }}" style="display:none;">
+                        <button class="btn btn-sm btn-outline-primary" onclick="toggleEdit('username')">
+                            <span id="usernameEditBtn">Edit</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6>Email</h6>
+                        <p id="emailDisplay">{{ request.user.email }}</p>
+                    </div>
+                    <div class="inline-edit">
+                        <input type="email" class="form-control form-control-sm" id="emailInput" value="{{ request.user.email }}" style="display:none;">
+                        <button class="btn btn-sm btn-outline-primary" onclick="toggleEdit('email')">
+                            <span id="emailEditBtn">Edit</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h5><i class="bi bi-globe me-2"></i>Preferences</h5>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6>Currency</h6>
+                        <p>{{ request.user.get_currency_display }} ({{ request.user.currency }})</p>
+                    </div>
+                    <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">Change</a>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6>Salary Day</h6>
+                        <p>Day {{ request.user.salary_day }} of each month</p>
+                    </div>
+                    <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">Change</a>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h5><i class="bi bi-shield-lock me-2"></i>Security</h5>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6>Password</h6>
+                        <p>Last changed: Never</p>
+                    </div>
+                    <a href="{% url 'change_password' %}" class="btn btn-sm btn-outline-primary">Change Password</a>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h5><i class="bi bi-download me-2"></i>Data Management</h5>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6>Export Data</h6>
+                        <p>Download all your data as CSV</p>
+                    </div>
+                    <a href="{% url 'export_transactions' %}?type=expense&format=csv" class="btn btn-sm btn-primary"><i class="bi bi-download me-1"></i>Export</a>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h5><i class="bi bi-trash me-2"></i>Danger Zone</h5>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6 class="text-danger">Delete Account</h6>
+                        <p>Permanently delete your account and all data</p>
+                    </div>
+                    <a href="{% url 'delete_account' %}" class="btn btn-sm btn-danger">Delete Account</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+function toggleEdit(field) {
+    const display = document.getElementById(field + 'Display');
+    const input = document.getElementById(field + 'Input');
+    const btn = document.getElementById(field + 'EditBtn');
+    
+    if (input.style.display === 'none') {
+        input.style.display = 'block';
+        display.style.display = 'none';
+        btn.textContent = 'Cancel';
+    } else {
+        input.style.display = 'none';
+        display.style.display = 'block';
+        btn.textContent = 'Edit';
+    }
+}
+
+document.getElementById('usernameInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') saveField('username');
+});
+
+document.getElementById('emailInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') saveField('email');
+});
+
+function saveField(field) {
+    const input = document.getElementById(field + 'Input');
+    const value = input.value.trim();
+    
+    if (field === 'username' && value.length < 3) {
+        alert('Username must be at least 3 characters');
+        return;
+    }
+    
+    const url = field === 'username' ? '{% url "update_username" %}' : '{% url "update_email" %}';
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: field + '=' + encodeURIComponent(value)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById(field + 'Display').textContent = value;
+            toggleEdit(field);
+            if (typeof SmartExpense !== 'undefined') {
+                SmartExpense.showToast(field.charAt(0).toUpperCase() + field.slice(1) + ' updated!', 'success');
+            }
+        } else {
+            alert(data.error || 'Error updating ' + field);
+        }
+    })
+    .catch(err => {
+        alert('Error: ' + err);
+    });
+}
+</script>
+{% endblock %}

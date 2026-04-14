@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - SmartExpense{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content { margin-left: 260px; padding-top: 80px; min-height: 100vh; }
+    .content-area { padding: 2rem; max-width: 800px; margin: 0 auto; }
+    .page-card { background: white; border-radius: 16px; padding: 2rem; }
+    .form-card-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; }
+    @media (max-width: 991px) { .main-content { margin-left: 0; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="content-area">
+        <div class="page-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="form-card-title mb-0"><i class="bi bi-{% if title == 'Add Expense' %}plus-circle{% else %}pencil{% endif %} me-2"></i>{{ title }}</h2>
+                <div id="voiceBtnContainer"></div>
+            </div>
+
+            <div id="voiceTranscriptBox" class="voice-transcript-box mb-3"></div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Amount (₹)</label>
+                        {{ form.amount }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Type</label>
+                        {{ form.transaction_type }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Category</label>
+                        {{ form.category }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Account</label>
+                        {{ form.account }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    {{ form.description }}
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Date</label>
+                        {{ form.date }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Tags (comma-separated)</label>
+                        {{ form.tags }}
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <div class="form-check">
+                        {{ form.is_recurring }}
+                        <label class="form-check-label" for="{{ form.is_recurring.id_for_label }}">
+                            Recurring Transaction
+                        </label>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-2"></i>Save {{ title }}
+                    </button>
+                    <a href="{% url 'expense_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const transcriptBox = document.getElementById('voiceTranscriptBox');
+
+    const btn = VoiceInput.createButton({
+        categorySelector: '#id_category',
+        mode: 'form',
+        onTranscript: function (text) {
+            transcriptBox.textContent = '🎤 "' + text + '"';
+            transcriptBox.classList.add('visible');
+        },
+        onResult: function (result) {
+            console.log('Voice result:', result);
+        }
+    });
+
+    document.getElementById('voiceBtnContainer').appendChild(btn);
+
+    // ── Auto-categorization from description typing ──
+    const descField  = document.querySelector('#id_description');
+    const catField   = document.querySelector('#id_category');
+    const catHint    = document.createElement('small');
+    catHint.style.cssText = 'color:#6366F1;font-size:0.78rem;margin-top:4px;display:none';
+    if (catField) catField.parentNode.appendChild(catHint);
+
+    if (descField && catField) {
+        let acTimer;
+        descField.addEventListener('input', function () {
+            clearTimeout(acTimer);
+            acTimer = setTimeout(() => {
+                if (this.value.length >= 4) {
+                    const val = VoiceInput.findCategoryOption(this.value, catField);
+                    if (val && !catField.value) {
+                        catField.value = val;
+                        const name = catField.options[catField.selectedIndex].text;
+                        catHint.textContent = '✦ Auto-selected: ' + name;
+                        catHint.style.display = 'block';
+                        setTimeout(() => { catHint.style.display = 'none'; }, 3000);
+                    }
+                }
+            }, 450);
+        });
+    }
+});
+</script>
+{% endblock %}

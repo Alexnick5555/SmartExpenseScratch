@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Subscriptions - SmartExpense{% endblock %}
+{% block page_title %}Subscriptions{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content { margin-left: 260px; padding-top: 80px; min-height: 100vh; }
+    .content-area { padding: 2rem; }
+    .page-card { background: white; border-radius: 16px; padding: 1.5rem; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; }
+    .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .summary-card { background: linear-gradient(135deg, var(--primary), #1B5E20); color: white; padding: 1.5rem; border-radius: 12px; }
+    .summary-value { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 600; }
+    .summary-label { opacity: 0.9; }
+    .sub-card { display: flex; align-items: center; padding: 1rem; border-radius: 12px; background: #F9FAFB; margin-bottom: 1rem; transition: all 0.3s; }
+    .sub-card:hover { transform: translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+    .sub-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-right: 1rem; }
+    .sub-info { flex: 1; }
+    .sub-name { font-weight: 600; font-size: 1.1rem; }
+    .sub-date { color: #6B7280; font-size: 0.9rem; }
+    .sub-amount { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 1.1rem; }
+    .sub-cycle { font-size: 0.85rem; color: #6B7280; }
+    .sub-actions { display: flex; gap: 0.5rem; margin-left: 1rem; }
+    .action-btn { padding: 0.4rem 0.75rem; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; }
+    .action-btn.edit { background: rgba(21, 101, 192, 0.1); color: #1565C0; }
+    .action-btn.delete { background: rgba(229, 57, 53, 0.1); color: #E53935; }
+    @media (max-width: 991px) { .main-content { margin-left: 0; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="content-area">
+        <div class="page-card">
+            <div class="page-header">
+                <h2 class="page-title"><i class="bi bi-repeat me-2"></i>Subscriptions</h2>
+                <a href="{% url 'subscription_add' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-2"></i>Add Subscription</a>
+            </div>
+
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <div class="summary-value">₹{{ monthly_total|floatformat:0 }}</div>
+                    <div class="summary-label">Monthly Total</div>
+                </div>
+                <div class="summary-card" style="background: linear-gradient(135deg, #1565C0, #0D47A1);">
+                    <div class="summary-value">₹{{ yearly_total|floatformat:0 }}</div>
+                    <div class="summary-label">Yearly Total</div>
+                </div>
+            </div>
+
+            {% for sub in subscriptions %}
+                <div class="sub-card">
+                    <div class="sub-icon" style="background: {{ sub.category.color|default:'#6B7280' }}20; color: {{ sub.category.color|default:'#6B7280' }};">
+                        <i class="bi {{ sub.category.icon|default:'bi-repeat' }}"></i>
+                    </div>
+                    <div class="sub-info">
+                        <div class="sub-name">{{ sub.name }}</div>
+                        <div class="sub-date">Next: {{ sub.next_payment|date:"M d, Y" }}</div>
+                    </div>
+                    <div class="sub-amount">
+                        ₹{{ sub.amount|floatformat:0 }}
+                        <div class="sub-cycle">/{{ sub.get_cycle_display|slice:":2" }}</div>
+                    </div>
+                    <div class="sub-actions">
+                        <a href="{% url 'subscription_edit' sub.pk %}" class="action-btn edit"><i class="bi bi-pencil"></i></a>
+                        <a href="{% url 'subscription_delete' sub.pk %}" class="action-btn delete" onclick="return confirm('Are you sure?')"><i class="bi bi-trash"></i></a>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-center py-5">
+                    <i class="bi bi-repeat" style="font-size: 4rem; opacity: 0.3;"></i>
+                    <p class="mt-3 text-muted">No subscriptions tracked yet</p>
+                    <a href="{% url 'subscription_add' %}" class="btn btn-primary">Add Your First Subscription</a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</main>
+{% endblock %}

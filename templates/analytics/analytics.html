@@ -1,0 +1,466 @@
+{% extends 'base.html' %}
+{% load static smart_filters %}
+
+{% block title %}Analytics - SmartExpense{% endblock %}
+{% block page_title %}Analytics & Insights{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --font-display: 'DM Sans', sans-serif;
+        --font-mono: 'Space Mono', monospace;
+    }
+    .main-content { margin-left: 260px; padding-top: 80px; min-height: 100vh; }
+    .analytics-content { padding: 2rem; max-width: 1600px; margin: 0 auto; }
+    
+    .page-header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 2rem; 
+    }
+    .page-title { 
+        font-family: var(--font-display);
+        font-size: 1.5rem; 
+        font-weight: 700;
+    }
+    .stat-grid { 
+        display: grid; 
+        grid-template-columns: repeat(4, 1fr); 
+        gap: 1.25rem; 
+        margin-bottom: 2rem; 
+    }
+    .stat-card { 
+        background: white; 
+        border-radius: 16px; 
+        padding: 1.5rem; 
+        box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+    .stat-label { font-size: 0.85rem; color: #6B7280; font-weight: 500; }
+    .stat-value { 
+        font-family: var(--font-mono); 
+        font-size: 1.75rem; 
+        font-weight: 700; 
+        color: #1a1a2e;
+    }
+    
+    .chart-card { 
+        background: white; 
+        border-radius: 16px; 
+        padding: 1.5rem; 
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+    .chart-header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 1.5rem;
+    }
+    .chart-title { 
+        font-family: var(--font-display);
+        font-size: 1.1rem; 
+        font-weight: 600; 
+    }
+    .chart-container { position: relative; height: 300px; }
+    
+    .export-btns { display: flex; gap: 0.5rem; }
+    .export-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: 1px solid #E5E7EB;
+        background: white;
+        color: #374151;
+        font-size: 0.85rem;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.2s;
+    }
+    .export-btn:hover { background: #F9FAFB; border-color: #D1D5DB; }
+    
+    .streak-card {
+        background: linear-gradient(135deg, #6366F1, #8B5CF6);
+        color: white;
+        border-radius: 20px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    .streak-number {
+        font-family: var(--font-mono);
+        font-size: 4rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+    .streak-label { font-size: 1.25rem; opacity: 0.9; }
+    .streak-status { 
+        margin-top: 1rem; 
+        padding: 0.5rem 1rem; 
+        background: rgba(255,255,255,0.2); 
+        border-radius: 20px;
+        display: inline-block;
+    }
+    
+    .goals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+    .goal-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.25rem;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+    .goal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+    .goal-name { font-weight: 600; font-size: 1.1rem; }
+    .goal-meta { font-size: 0.85rem; color: #6B7280; }
+    .goal-progress { 
+        height: 10px; 
+        background: #E5E7EB; 
+        border-radius: 5px; 
+        overflow: hidden; 
+        margin: 0.75rem 0;
+    }
+    .goal-progress-bar { 
+        height: 100%; 
+        border-radius: 5px; 
+        transition: width 0.5s ease;
+    }
+    .goal-amounts {
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+    }
+    
+    .tab-nav { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid #E5E7EB; padding-bottom: 0.5rem; }
+    .tab-btn {
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        background: none;
+        border: none;
+        color: #6B7280;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .tab-btn.active { background: #EEF2FF; color: #4F46E5; }
+    .tab-btn:hover { color: #374151; }
+    
+    .period-selector {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .period-btn {
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        border: 1px solid #E5E7EB;
+        background: white;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+    .period-btn.active { background: #4F46E5; color: white; border-color: #4F46E5; }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="analytics-content">
+        <!-- Header -->
+        <div class="page-header">
+            <h1 class="page-title">Analytics & Insights</h1>
+            <div class="export-btns">
+                <a href="{% url 'export_transactions' %}?type=expense&format=csv" class="export-btn">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
+                </a>
+                <a href="{% url 'export_transactions' %}?type=income&format=csv" class="export-btn">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Income CSV
+                </a>
+            </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="showTab('overview')">Overview</button>
+            <button class="tab-btn" onclick="showTab('trends')">Trends</button>
+            <button class="tab-btn" onclick="showTab('categories')">Categories</button>
+            <button class="tab-btn" onclick="showTab('goals')">Goals</button>
+            <button class="tab-btn" onclick="showTab('annual')">Annual</button>
+        </div>
+        
+        <!-- Overview Tab -->
+        <div id="tab-overview" class="tab-content">
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Income (YTD)</div>
+                    <div class="stat-value">₹{{ annual_income|floatformat:0 }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Expenses (YTD)</div>
+                    <div class="stat-value">₹{{ annual_expense|floatformat:0 }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Net Savings</div>
+                    <div class="stat-value" style="color: {% if net_savings >= 0 %}#10B981{% else %}#EF4444{% endif %}">
+                        ₹{{ net_savings|floatformat:0 }}
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg. Monthly Expense</div>
+                    <div class="stat-value">₹{{ avg_expense|floatformat:0 }}</div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Income vs Expenses</h3>
+                            <div class="period-selector">
+                                <button class="period-btn active">6M</button>
+                                <button class="period-btn">12M</button>
+                                <button class="period-btn">YTD</button>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="mainTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <!-- Streak Card -->
+                    <div class="streak-card">
+                        <div class="streak-number">{{ current_streak }}</div>
+                        <div class="streak-label">Day Streak</div>
+                        <div class="streak-status">{{ streak_status }}</div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Top Categories</h3>
+                        </div>
+                        <canvas id="miniCategoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Trends Tab -->
+        <div id="tab-trends" class="tab-content" style="display:none;">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Weekly Spending Trends</h3>
+                    <div class="period-selector">
+                        <button class="period-btn active" onclick="loadTrends(12)">12 Weeks</button>
+                        <button class="period-btn" onclick="loadTrends(8)">8 Weeks</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="trendsChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Categories Tab -->
+        <div id="tab-categories" class="tab-content" style="display:none;">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Expense by Category</h3>
+                            <div class="period-selector">
+                                <button class="period-btn active" onclick="loadCategory('month')">This Month</button>
+                                <button class="period-btn" onclick="loadCategory('year')">This Year</button>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="categoryPieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Category Details</h3>
+                        </div>
+                        <div id="categoryList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Goals Tab -->
+        <div id="tab-goals" class="tab-content" style="display:none;">
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Savings Goals</h3>
+                            <a href="{% url 'savings_goal_add' %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus"></i> New Goal
+                            </a>
+                        </div>
+                        <div class="goals-grid">
+                            {% for goal in savings_goals %}
+                            <div class="goal-card">
+                                <div class="goal-header">
+                                    <div>
+                                        <div class="goal-name">{{ goal.name }}</div>
+                                        <div class="goal-meta">{{ goal.get_goal_type_display }}</div>
+                                    </div>
+                                    <i class="bi {{ goal.icon }}" style="font-size: 1.5rem; color: {{ goal.color }};"></i>
+                                </div>
+                                <div class="goal-progress">
+                                    <div class="goal-progress-bar" style="width: {{ goal.get_progress_percentage }}%; background: {{ goal.color }};"></div>
+                                </div>
+                                <div class="goal-amounts">
+                                    <span>₹{{ goal.current_amount|floatformat:0 }}</span>
+                                    <span>₹{{ goal.target_amount|floatformat:0 }}</span>
+                                </div>
+                                {% if goal.deadline %}
+                                <div class="goal-meta mt-2">Due: {{ goal.deadline|date:"M d, Y" }}</div>
+                                {% endif %}
+                            </div>
+                            {% empty %}
+                            <p class="text-muted">No savings goals yet. Create one to start tracking!</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Goal Progress</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="goalsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Annual Tab -->
+        <div id="tab-annual" class="tab-content" style="display:none;">
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-label">{{ current_year }} Income</div>
+                    <div class="stat-value">₹{{ annual_income|floatformat:0 }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">{{ current_year }} Expenses</div>
+                    <div class="stat-value">₹{{ annual_expense|floatformat:0 }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Net Savings</div>
+                    <div class="stat-value">₹{{ net_savings|floatformat:0 }}</div>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Monthly Breakdown - {{ current_year }}</h3>
+                </div>
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="annualChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+var monthlyData = {{ monthly_data|safe_json }};
+var categoryData = {{ category_expenses|safe_json }};
+
+function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+    document.getElementById('tab-' + tabName).style.display = 'block';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (monthlyData && monthlyData.length > 0) {
+        initMainChart(monthlyData);
+    }
+    if (categoryData && categoryData.length > 0) {
+        initMiniCategory(categoryData);
+    }
+});
+
+function initMainChart(data) {
+    const ctx = document.getElementById('mainTrendChart');
+    if (!ctx) return;
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.map(d => d.month),
+            datasets: [
+                { label: 'Income', data: data.map(d => d.income), backgroundColor: '#10B981' },
+                { label: 'Expenses', data: data.map(d => d.expense), backgroundColor: '#EF4444' }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } }
+        }
+    });
+}
+
+function initMiniCategory(data) {
+    const ctx = document.getElementById('miniCategoryChart');
+    if (!ctx || !data.length) return;
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: data.map(d => d.category__name),
+            datasets: [{ data: data.map(d => d.total), backgroundColor: data.map(d => d.category__color) }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+function loadTrends(weeks) {
+    fetch('/spending-trends/?weeks=' + weeks)
+        .then(r => r.json())
+        .then(data => {
+            const ctx = document.getElementById('trendsChart');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.map(d => d.week),
+                        datasets: [{ label: 'Weekly Spending', data: data.map(d => d.total), borderColor: '#6366F1', backgroundColor: 'rgba(99,102,241,0.1)', fill: true }]
+                    }
+                });
+            }
+        });
+}
+
+function loadCategory(period) {
+    fetch('/category-breakdown/?period=' + period)
+        .then(r => r.json())
+        .then(data => {
+            const ctx = document.getElementById('categoryPieChart');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.map(d => d.category),
+                        datasets: [{ data: data.map(d => d.total), backgroundColor: data.map(d => d.color) }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+        });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Budgets - SmartExpense{% endblock %}
+{% block page_title %}Budgets{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content { margin-left: 260px; padding-top: 80px; min-height: 100vh; }
+    .content-area { padding: 2rem; }
+    .page-card { background: white; border-radius: 16px; padding: 1.5rem; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; }
+    .month-selector { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+    .month-nav { display: flex; align-items: center; gap: 0.5rem; }
+    .budget-item { background: #F9FAFB; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+    .budget-header { display: flex; justify-content: space-between; margin-bottom: 0.75rem; }
+    .budget-category { font-weight: 600; font-size: 1.1rem; }
+    .budget-values { font-family: 'JetBrains Mono', monospace; }
+    .budget-bar { height: 10px; background: #E5E7EB; border-radius: 5px; overflow: hidden; margin-bottom: 0.5rem; }
+    .budget-fill { height: 100%; border-radius: 5px; transition: width 0.5s ease; }
+    .budget-footer { display: flex; justify-content: space-between; font-size: 0.9rem; color: #6B7280; }
+    .over-budget { color: #E53935; font-weight: 600; }
+    .summary-row { display: flex; justify-content: space-between; padding: 1rem; background: rgba(46, 125, 50, 0.1); border-radius: 12px; margin-top: 1rem; font-weight: 600; }
+    @media (max-width: 991px) { .main-content { margin-left: 0; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="content-area">
+        <div class="page-card">
+            <div class="page-header">
+                <h2 class="page-title"><i class="bi bi-pie-chart me-2"></i>Budgets</h2>
+                <a href="{% url 'budget_add' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-2"></i>Add Budget</a>
+            </div>
+
+            <div class="month-selector">
+                <div class="month-nav">
+                    <a href="?month={% if month == 1 %}12&year={{ year|add:'-1' }}{% else %}{{ month|add:'-1' }}&year={{ year }}{% endif %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                    <span class="fw-bold">{{ month }}/{{ year }}</span>
+                    <a href="?month={% if month == 12 %}1&year={{ year|add:'1' }}{% else %}{{ month|add:'1' }}&year={{ year }}{% endif %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            {% for item in budget_data %}
+                <div class="budget-item">
+                    <div class="budget-header">
+                        <span class="budget-category">{{ item.budget.category.name }}</span>
+                        <span class="budget-values {% if item.is_over %}over-budget{% endif %}">
+                            ₹{{ item.spent|floatformat:0 }} / ₹{{ item.budget.amount|floatformat:0 }}
+                        </span>
+                    </div>
+                    <div class="budget-bar">
+                        <div class="budget-fill {% if item.percentage > 80 %}bg-danger{% elif item.percentage > 60 %}bg-warning{% else %}bg-success{% endif %}"
+                             style="width: {{ item.percentage }}%"></div>
+                    </div>
+                    <div class="budget-footer">
+                        <span>{{ item.percentage|floatformat:0 }}% used</span>
+                        <span>₹{{ item.remaining|floatformat:0 }} remaining</span>
+                    </div>
+                    <div class="mt-2">
+                        <a href="{% url 'budget_edit' item.budget.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <a href="{% url 'budget_delete' item.budget.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">Delete</a>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-center py-5">
+                    <i class="bi bi-pie-chart" style="font-size: 4rem; opacity: 0.3;"></i>
+                    <p class="mt-3 text-muted">No budgets set for this month</p>
+                    <a href="{% url 'budget_add' %}" class="btn btn-primary">Set Your First Budget</a>
+                </div>
+            {% endfor %}
+
+            {% if budget_data %}
+                <div class="summary-row">
+                    <span>Total Budget: ₹{{ total_budget|floatformat:0 }}</span>
+                    <span>Total Spent: ₹{{ total_spent|floatformat:0 }}</span>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}
