@@ -21,16 +21,6 @@
     <!-- Custom CSS -->
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
 
-    <!-- Theme initialization to prevent flash -->
-    <script>
-        (function() {
-            const savedTheme = localStorage.getItem('smartexpense-theme');
-            if (savedTheme === 'dark') {
-                document.body.classList.add('light-theme');
-            }
-        })();
-    </script>
-
     {% block extra_css %}{% endblock %}
 </head>
 <body class="{% if request.user.is_authenticated %}dashboard-body{% endif %}">
