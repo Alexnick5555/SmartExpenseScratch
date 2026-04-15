@@ -49,27 +49,47 @@
     body.light-theme .inline-edit input { background: white !important; border-color: #E2E8F0 !important; color: #1E293B !important; }
     body.light-theme .form-control { background: white !important; border-color: #E2E8F0 !important; color: #1E293B !important; }
     body.light-theme .form-control:focus { background: white !important; color: #1E293B !important; }
-    body.light-theme .btn-outline-primary,
-    body.light-theme button.btn-outline-primary {
-        border-color: #6366F1 !important;
-        color: #4F46E5 !important;
-        background: transparent !important;
-    }
-    body.light-theme .btn-outline-primary:hover,
-    body.light-theme .btn-outline-primary:focus,
-    body.light-theme .btn-outline-primary:active,
-    body.light-theme button.btn-outline-primary:hover,
-    body.light-theme button.btn-outline-primary:focus,
-    body.light-theme button.btn-outline-primary:active {
-        background: #4F46E5 !important;
-        border-color: #4F46E5 !important;
-        color: white !important;
-    }
-    body.light-theme .btn-outline-primary.btn-sm,
-    body.light-theme button.btn-outline-primary.btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
-    }
+/* Light theme overrides for buttons only in settings page */
+body.light-theme .btn-outline-primary,
+body.light-theme .btn-outline-primary.btn-sm,
+body.light-theme button[type="button"].btn-outline-primary,
+body.light-theme a.btn-outline-primary,
+body.light-theme .btn-outline-primary span,
+body.light-theme button[type="button"].btn-outline-primary span,
+body.light-theme a.btn-outline-primary span,
+body.light-theme .btn-outline-primary:focus,
+body.light-theme .btn-outline-primary:active {
+    border-color: #4F46E5 !important;
+    color: #4F46E5 !important;
+    background: transparent !important;
+}
+body.light-theme .btn-outline-primary:hover,
+body.light-theme .btn-outline-primary:focus,
+body.light-theme .btn-outline-primary:active,
+body.light-theme button[type="button"].btn-outline-primary:hover,
+body.light-theme button[type="button"].btn-outline-primary:focus,
+body.light-theme button[type="button"].btn-outline-primary:active,
+body.light-theme a.btn-outline-primary:hover {
+    background: #4F46E5 !important;
+    border-color: #4F46E5 !important;
+    color: white !important;
+}
+body.light-theme .btn-outline-primary:hover span,
+body.light-theme button[type="button"].btn-outline-primary:hover span,
+body.light-theme a.btn-outline-primary:hover span,
+body.light-theme .btn-outline-primary:hover .edit-btn-text,
+body.light-theme button[type="button"].btn-outline-primary:hover .edit-btn-text,
+body.light-theme a.btn-outline-primary:hover .edit-btn-text {
+    color: white !important;
+}
+body.light-theme .edit-btn-text {
+    color: #4F46E5 !important;
+}
+body.light-theme .btn-outline-primary.btn-sm,
+body.light-theme button[type="button"].btn-outline-primary.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
 </style>
 {% endblock %}
 
@@ -89,7 +109,7 @@
                     <div class="inline-edit">
                         <input type="text" class="form-control form-control-sm" id="usernameInput" value="{{ request.user.username }}" style="display:none;">
                         <button class="btn btn-sm btn-outline-primary" onclick="toggleEdit('username')">
-                            <span id="usernameEditBtn">Edit</span>
+                            <span id="usernameEditBtn" class="edit-btn-text">Edit</span>
                         </button>
                     </div>
                 </div>
@@ -101,7 +121,7 @@
                     <div class="inline-edit">
                         <input type="email" class="form-control form-control-sm" id="emailInput" value="{{ request.user.email }}" style="display:none;">
                         <button class="btn btn-sm btn-outline-primary" onclick="toggleEdit('email')">
-                            <span id="emailEditBtn">Edit</span>
+                            <span id="emailEditBtn" class="edit-btn-text">Edit</span>
                         </button>
                     </div>
                 </div>
