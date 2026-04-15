@@ -7,17 +7,69 @@
 {% block extra_css %}
 <style>
     .content-area { padding: 2rem; }
-    .page-card { background: white; border-radius: 16px; padding: 2rem; max-width: 800px; margin: 0 auto; }
-    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; }
-    .settings-section { margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #E5E7EB; }
+    .page-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 2rem; max-width: 800px; margin: 0 auto; }
+    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; color: white; }
+    .settings-section { margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
     .settings-section:last-child { border-bottom: none; margin-bottom: 0; }
-    .settings-section h5 { font-weight: 600; margin-bottom: 1rem; color: var(--primary); }
+    .settings-section h5 { font-weight: 600; margin-bottom: 1rem; color: #818CF8; }
     .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; }
-    .setting-info h6 { margin: 0; font-weight: 500; }
-    .setting-info p { margin: 0; font-size: 0.9rem; color: #6B7280; }
+    .setting-info h6 { margin: 0; font-weight: 500; color: white; }
+    .setting-info p { margin: 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.6); }
     .inline-edit { display: flex; gap: 0.5rem; align-items: center; }
-    .inline-edit input { flex: 1; max-width: 200px; }
+    .inline-edit input { flex: 1; max-width: 200px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: white; }
+    .inline-edit input:focus { background: rgba(255, 255, 255, 0.12); border-color: #6366F1; color: white; }
+    
+    .form-control { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: white; }
+    .form-control:focus { background: rgba(255, 255, 255, 0.12); border-color: #6366F1; color: white; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15); }
+    
+    .btn-outline-primary,
+    button.btn-outline-primary {
+        background: transparent !important;
+        border: 1px solid rgba(99, 102, 241, 0.5) !important;
+        color: #818CF8 !important;
+    }
+    .btn-outline-primary:hover,
+    button.btn-outline-primary:hover,
+    .btn-outline-primary:focus,
+    .btn-outline-primary:active {
+        background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
+        border-color: transparent !important;
+        color: white !important;
+    }
+    
     @media (max-width: 991px) { .main-content { margin-left: 0; } }
+    
+    /* Light theme overrides */
+    body.light-theme .page-card { background: white !important; border-color: rgba(0, 0, 0, 0.08) !important; }
+    body.light-theme .page-title { color: #1E293B !important; }
+    body.light-theme .settings-section { border-color: rgba(0, 0, 0, 0.08) !important; }
+    body.light-theme .settings-section h5 { color: #6366F1 !important; }
+    body.light-theme .setting-info h6 { color: #1E293B !important; }
+    body.light-theme .setting-info p { color: #64748B !important; }
+    body.light-theme .inline-edit input { background: white !important; border-color: #E2E8F0 !important; color: #1E293B !important; }
+    body.light-theme .form-control { background: white !important; border-color: #E2E8F0 !important; color: #1E293B !important; }
+    body.light-theme .form-control:focus { background: white !important; color: #1E293B !important; }
+    body.light-theme .btn-outline-primary,
+    body.light-theme button.btn-outline-primary {
+        border-color: #6366F1 !important;
+        color: #4F46E5 !important;
+        background: transparent !important;
+    }
+    body.light-theme .btn-outline-primary:hover,
+    body.light-theme .btn-outline-primary:focus,
+    body.light-theme .btn-outline-primary:active,
+    body.light-theme button.btn-outline-primary:hover,
+    body.light-theme button.btn-outline-primary:focus,
+    body.light-theme button.btn-outline-primary:active {
+        background: #4F46E5 !important;
+        border-color: #4F46E5 !important;
+        color: white !important;
+    }
+    body.light-theme .btn-outline-primary.btn-sm,
+    body.light-theme button.btn-outline-primary.btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
 </style>
 {% endblock %}
 

@@ -7,7 +7,62 @@
 {% block extra_css %}
 <style>
     .content-area { padding: 2rem; max-width: 600px; margin: 0 auto; }
-    .page-card { background: white; border-radius: 16px; padding: 2rem; }
+    .page-card { 
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px; 
+        padding: 2rem; 
+    }
+    .page-title { color: white !important; }
+    .form-label {
+        color: rgba(255, 255, 255, 0.85);
+        font-weight: 600;
+    }
+    .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: white;
+        border-radius: 10px;
+        padding: 0.75rem;
+    }
+    .form-control:focus, .form-select:focus {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: #6366F1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        color: white;
+    }
+    .form-select option {
+        background: #1E293B;
+        color: white;
+    }
+    
+    /* Light theme overrides */
+    body.light-theme .page-card {
+        background: white !important;
+        border-color: rgba(0, 0, 0, 0.08) !important;
+    }
+    body.light-theme .page-title {
+        color: #1E293B !important;
+    }
+    body.light-theme .form-label {
+        color: #374151 !important;
+    }
+    body.light-theme .form-control, 
+    body.light-theme .form-select {
+        background: #F8FAFC !important;
+        border-color: #E2E8F0 !important;
+        color: #1E293B !important;
+    }
+    body.light-theme .form-control:focus, 
+    body.light-theme .form-select:focus {
+        background: white !important;
+        border-color: #6366F1 !important;
+    }
+    body.light-theme .form-select option {
+        background: white !important;
+        color: #1E293B !important;
+    }
     @media (max-width: 991px) { .main-content { margin-left: 0; } }
 </style>
 {% endblock %}

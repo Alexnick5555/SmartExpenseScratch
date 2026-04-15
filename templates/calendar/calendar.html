@@ -6,7 +6,10 @@
 
 {% block extra_css %}
 <style>
-    .cal-page { padding: 2rem; }
+    .cal-page { 
+        padding: 2rem;
+        color: white;
+    }
     
     .cal-page .tx-link {
         text-decoration: none;
@@ -15,7 +18,7 @@
         width: 100%;
     }
     .cal-page .tx-link:hover {
-        background: #F9FAFB;
+        background: rgba(255, 255, 255, 0.05);
     }
 
     /* Header */
@@ -29,28 +32,39 @@
         font-family: 'Poppins', sans-serif;
         font-size: 1.5rem;
         font-weight: 700;
+        color: white;
     }
     .cal-nav-btn {
-        background: white;
-        border: 1px solid #E5E7EB;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 10px;
         padding: 0.5rem 1rem;
         font-size: 0.9rem;
-        color: #374151;
+        color: rgba(255, 255, 255, 0.8);
         text-decoration: none;
         transition: all 0.2s;
         display: inline-flex;
         align-items: center;
         gap: 0.4rem;
     }
-    .cal-nav-btn:hover { background: #F3F4F6; color: #111827; }
+    .cal-nav-btn:hover { 
+        background: linear-gradient(135deg, #6366F1, #8B5CF6); 
+        border-color: transparent;
+        color: white;
+    }
 
     /* Layout */
     .cal-layout { display: grid; grid-template-columns: 1fr 280px; gap: 1.5rem; align-items: start; }
     @media (max-width: 1100px) { .cal-layout { grid-template-columns: 1fr; } }
 
     /* Grid */
-    .cal-card { background: white; border-radius: 16px; padding: 1.5rem; }
+    .cal-card { 
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px; 
+        padding: 1.5rem; 
+    }
     .cal-weekdays {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
@@ -61,7 +75,7 @@
         text-align: center;
         font-size: 0.78rem;
         font-weight: 600;
-        color: #9CA3AF;
+        color: rgba(255, 255, 255, 0.5);
         padding: 0.4rem 0;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -74,27 +88,41 @@
         min-height: 90px;
         border-radius: 10px;
         padding: 0.5rem;
-        border: 1px solid #F3F4F6;
-        background: #FAFAFA;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
         cursor: pointer;
         transition: all 0.2s;
         position: relative;
         overflow: hidden;
     }
-    .cal-day:hover { background: #EEF2FF; border-color: #C7D2FE; }
-    .cal-day.today { border-color: #6366F1; background: #EEF2FF; }
-    .cal-day.today .day-num { color: #4F46E5; font-weight: 700; }
-    .cal-day.empty { background: transparent; border-color: transparent; cursor: default; min-height: 90px; }
+    .cal-day:hover { 
+        background: rgba(99, 102, 241, 0.1); 
+        border-color: rgba(99, 102, 241, 0.3); 
+    }
+    .cal-day.today { 
+        border-color: #6366F1; 
+        background: rgba(99, 102, 241, 0.1); 
+    }
+    .cal-day.today .day-num { 
+        color: #818CF8; 
+        font-weight: 700; 
+    }
+    .cal-day.empty { 
+        background: transparent; 
+        border-color: transparent; 
+        cursor: default; 
+        min-height: 90px; 
+    }
 
     .day-num {
         font-size: 0.9rem;
         font-weight: 600;
-        color: #374151;
+        color: rgba(255, 255, 255, 0.85);
         margin-bottom: 4px;
     }
     .today-badge {
         display: inline-block;
-        background: #4F46E5;
+        background: linear-gradient(135deg, #6366F1, #8B5CF6);
         color: white;
         border-radius: 50%;
         width: 22px;
@@ -118,7 +146,69 @@
         display: flex;
         align-items: center;
         gap: 3px;
+        background: rgba(99, 102, 241, 0.15);
+        color: #818CF8;
     }
+    .event-pill.subs { background: rgba(245, 158, 11, 0.15); color: #FBBF24; }
+    .event-pill.recurring { background: rgba(16, 185, 129, 0.15); color: #34D399; }
+
+    /* Sidebar */
+    .cal-sidebar {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 1.25rem;
+        position: sticky;
+        top: 90px;
+    }
+    .sidebar-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: white;
+    }
+    .upcoming-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .upcoming-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .upcoming-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        background: linear-gradient(135deg, #F59E0B, #FBBF24);
+        color: white;
+    }
+    .upcoming-details { flex: 1; }
+    .upcoming-name { font-weight: 600; font-size: 0.9rem; color: white; }
+    .upcoming-date { font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); }
+    .upcoming-amount { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #FBBF24; }
+    .empty-upcoming { text-align: center; padding: 2rem 1rem; color: rgba(255, 255, 255, 0.4); font-size: 0.9rem; }
+    .empty-upcoming i { font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.3; display: block; }
+
+    .cal-legend {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: rgba(255, 255, 255, 0.6); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 3px; }
+    .legend-dot.exp { background: #F87171; }
+    .legend-dot.inc { background: #34D399; }
+    .legend-dot.subs { background: #FBBF24; }
+    .legend-dot.recurring { background: #818CF8; }
 
     /* Spend dot */
     .spend-dot {
@@ -126,11 +216,11 @@
         bottom: 5px;
         right: 6px;
         font-size: 0.65rem;
-        color: #9CA3AF;
+        color: rgba(255, 255, 255, 0.4);
         font-family: 'JetBrains Mono', monospace;
     }
-    .spend-dot.has-expense { color: #EF4444; }
-    .spend-dot.has-income  { color: #22C55E; }
+    .spend-dot.has-expense { color: #F87171; }
+    .spend-dot.has-income  { color: #34D399; }
 
     /* Legend */
     .cal-legend {
@@ -144,7 +234,7 @@
         align-items: center;
         gap: 5px;
         font-size: 0.8rem;
-        color: #6B7280;
+        color: rgba(255, 255, 255, 0.6);
     }
     .legend-dot {
         width: 10px; height: 10px; border-radius: 3px;
@@ -152,7 +242,8 @@
 
     /* Sidebar panel */
     .cal-sidebar-card {
-        background: white;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 16px;
         padding: 1.25rem;
         margin-bottom: 1rem;
@@ -165,13 +256,14 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        color: white;
     }
     .bill-item {
         display: flex;
         align-items: center;
         gap: 0.75rem;
         padding: 0.6rem 0;
-        border-bottom: 1px solid #F3F4F6;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
     .bill-item:last-child { border-bottom: none; }
     .bill-icon {
@@ -182,11 +274,13 @@
         justify-content: center;
         font-size: 1rem;
         flex-shrink: 0;
+        background: linear-gradient(135deg, #F59E0B, #FBBF24);
+        color: white;
     }
     .bill-info { flex: 1; min-width: 0; }
-    .bill-name { font-weight: 500; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .bill-date { font-size: 0.75rem; color: #9CA3AF; }
-    .bill-amount { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; color: #374151; }
+    .bill-name { font-weight: 500; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white; }
+    .bill-date { font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); }
+    .bill-amount { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; color: #FBBF24; }
 
     .days-badge {
         display: inline-block;
@@ -202,14 +296,16 @@
         display: none;
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.35);
+        background: rgba(0,0,0,0.6);
         z-index: 1000;
         align-items: center;
         justify-content: center;
     }
     .day-modal-backdrop.open { display: flex; }
     .day-modal {
-        background: white;
+        background: rgba(30, 41, 59, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 16px;
         padding: 1.5rem;
         width: 380px;
@@ -228,18 +324,19 @@
         align-items: center;
         margin-bottom: 1rem;
         padding-bottom: 0.75rem;
-        border-bottom: 1px solid #E5E7EB;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
     .day-modal-title {
         font-family: 'Poppins', sans-serif;
         font-size: 1.1rem;
         font-weight: 700;
+        color: white;
     }
     .day-modal-close {
         background: none;
         border: none;
         font-size: 1.4rem;
-        color: #9CA3AF;
+        color: rgba(255, 255, 255, 0.5);
         cursor: pointer;
         line-height: 1;
     }
@@ -248,7 +345,7 @@
         align-items: center;
         gap: 0.75rem;
         padding: 0.6rem 0;
-        border-bottom: 1px solid #F9FAFB;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
     .modal-event-row:last-child { border-bottom: none; }
     .modal-event-icon {
@@ -260,7 +357,100 @@
         font-size: 1.1rem;
         flex-shrink: 0;
     }
-    .empty-day-msg { text-align: center; color: #9CA3AF; padding: 1.5rem 0; font-size: 0.9rem; }
+    .empty-day-msg { text-align: center; color: rgba(255, 255, 255, 0.4); padding: 1.5rem 0; font-size: 0.9rem; }
+
+    .days-badge {
+        display: inline-block;
+        padding: 1px 7px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        margin-left: 4px;
+    }
+
+    /* Badge styles */
+    .cal-page .badge {
+        background: rgba(99, 102, 241, 0.15);
+        color: #818CF8;
+        border-radius: 50px;
+        font-weight: 600;
+    }
+
+    /* Light theme overrides */
+    body.light-theme .cal-page {
+        color: #1E293B !important;
+    }
+    body.light-theme .cal-month-title {
+        color: #1E293B !important;
+    }
+    body.light-theme .cal-weekday {
+        color: #64748B !important;
+    }
+    body.light-theme .day-num {
+        color: #1E293B !important;
+    }
+    body.light-theme .cal-day {
+        background: white !important;
+        border-color: rgba(0, 0, 0, 0.08) !important;
+    }
+    body.light-theme .cal-day:hover {
+        background: #F1F5F9 !important;
+    }
+    body.light-theme .cal-card {
+        background: white !important;
+        border-color: rgba(0, 0, 0, 0.08) !important;
+    }
+    body.light-theme .cal-sidebar-card {
+        background: white !important;
+        border-color: rgba(0, 0, 0, 0.08) !important;
+    }
+    body.light-theme .sidebar-title,
+    body.light-theme .cal-sidebar-title {
+        color: #1E293B !important;
+    }
+    body.light-theme .upcoming-name,
+    body.light-theme .bill-name {
+        color: #1E293B !important;
+    }
+    body.light-theme .upcoming-date,
+    body.light-theme .bill-date {
+        color: #64748B !important;
+    }
+    body.light-theme .legend-item {
+        color: #64748B !important;
+    }
+    body.light-theme .empty-upcoming,
+    body.light-theme .empty-day-msg {
+        color: #94A3B8 !important;
+    }
+    body.light-theme .cal-nav-btn {
+        background: #F1F5F9 !important;
+        border-color: #E2E8F0 !important;
+        color: #64748B !important;
+    }
+    body.light-theme .cal-nav-btn:hover {
+        background: #6366F1 !important;
+        border-color: transparent !important;
+        color: white !important;
+    }
+    body.light-theme .bill-item,
+    body.light-theme .upcoming-item {
+        background: #F8FAFC !important;
+        border-color: rgba(0, 0, 0, 0.06) !important;
+    }
+    body.light-theme .day-modal {
+        background: white !important;
+        border-color: rgba(0, 0, 0, 0.1) !important;
+    }
+    body.light-theme .day-modal-title {
+        color: #1E293B !important;
+    }
+    body.light-theme .day-modal-close {
+        color: #64748B !important;
+    }
+    body.light-theme .spend-dot {
+        color: #64748B !important;
+    }
 </style>
 {% endblock %}
 

@@ -21,6 +21,16 @@
     <!-- Custom CSS -->
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
 
+    <!-- Theme initialization to prevent flash -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('smartexpense-theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('light-theme');
+            }
+        })();
+    </script>
+
     {% block extra_css %}{% endblock %}
 </head>
 <body class="{% if request.user.is_authenticated %}dashboard-body{% endif %}">
@@ -48,8 +58,10 @@
     {% if bill_reminders %}
     <div id="billReminderBanner" style="
         position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;
-        background:white;border-radius:14px;padding:1rem 1.25rem;
-        box-shadow:0 8px 30px rgba(0,0,0,0.12);
+        background:rgba(30,41,59,0.95);backdrop-filter:blur(20px);
+        border:1px solid rgba(255,255,255,0.1);
+        border-radius:16px;padding:1rem 1.25rem;
+        box-shadow:0 8px 30px rgba(0,0,0,0.4);
         border-left:4px solid #F59E0B;
         max-width:360px;min-width:280px;
         animation:slideUpIn 0.4s ease;">
@@ -62,21 +74,21 @@
         <div style="display:flex;align-items:flex-start;gap:0.75rem">
             <i class="bi bi-bell-fill" style="color:#F59E0B;font-size:1.2rem;margin-top:2px;flex-shrink:0"></i>
             <div style="flex:1;min-width:0">
-                <div style="font-weight:700;font-size:0.9rem;color:#111827;margin-bottom:0.4rem">
+                <div style="font-weight:700;font-size:0.9rem;color:white;margin-bottom:0.4rem">
                     {{ bill_reminders|length }} Bill{{ bill_reminders|length|pluralize }} Due Soon
                 </div>
                 {% for sub in bill_reminders %}
-                <div style="font-size:0.82rem;color:#6B7280;display:flex;justify-content:space-between;margin-bottom:2px">
+                <div style="font-size:0.82rem;color:rgba(255,255,255,0.6);display:flex;justify-content:space-between;margin-bottom:2px">
                     <span>{{ sub.name }}</span>
-                    <span style="font-weight:600;color:#374151">{{ sub.next_payment|date:"d M" }}</span>
+                    <span style="font-weight:600;color:#FBBF24">{{ sub.next_payment|date:"d M" }}</span>
                 </div>
                 {% endfor %}
-                <a href="{% url 'financial_calendar' %}" style="font-size:0.8rem;color:#6366F1;font-weight:600;text-decoration:none;margin-top:0.4rem;display:inline-block">
+                <a href="{% url 'financial_calendar' %}" style="font-size:0.8rem;color:#818CF8;font-weight:600;text-decoration:none;margin-top:0.4rem;display:inline-block">
                     View Calendar →
                 </a>
             </div>
             <button onclick="document.getElementById('billReminderBanner').style.display='none'"
-                    style="background:none;border:none;color:#9CA3AF;font-size:1.2rem;cursor:pointer;padding:0;line-height:1;flex-shrink:0">
+                    style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.2rem;cursor:pointer;padding:0;line-height:1;flex-shrink:0">
                 &times;
             </button>
         </div>

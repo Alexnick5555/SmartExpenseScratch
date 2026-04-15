@@ -11,7 +11,12 @@
         --font-display: 'DM Sans', sans-serif;
         --font-mono: 'Space Mono', monospace;
     }
-    .analytics-content { padding: 2rem; max-width: 1600px; margin: 0 auto; }
+    .analytics-content { 
+        padding: 2rem; 
+        max-width: 1600px; 
+        margin: 0 auto;
+        color: white;
+    }
     
     .page-header { 
         display: flex; 
@@ -23,6 +28,7 @@
         font-family: var(--font-display);
         font-size: 1.5rem; 
         font-weight: 700;
+        color: white;
     }
     .stat-grid { 
         display: grid; 
@@ -31,25 +37,27 @@
         margin-bottom: 2rem; 
     }
     .stat-card { 
-        background: white; 
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 16px; 
         padding: 1.5rem; 
-        box-shadow: 0 4px 24px rgba(0,0,0,0.06);
     }
-    .stat-label { font-size: 0.85rem; color: #6B7280; font-weight: 500; }
+    .stat-label { font-size: 0.85rem; color: rgba(255, 255, 255, 0.5); font-weight: 500; }
     .stat-value { 
         font-family: var(--font-mono); 
         font-size: 1.75rem; 
         font-weight: 700; 
-        color: #1a1a2e;
+        color: white;
     }
     
     .chart-card { 
-        background: white; 
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 16px; 
         padding: 1.5rem; 
         margin-bottom: 1.5rem;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.06);
     }
     .chart-header { 
         display: flex; 
@@ -61,6 +69,7 @@
         font-family: var(--font-display);
         font-size: 1.1rem; 
         font-weight: 600; 
+        color: white;
     }
     .chart-container { position: relative; height: 300px; }
     
@@ -68,9 +77,9 @@
     .export-btn {
         padding: 0.5rem 1rem;
         border-radius: 8px;
-        border: 1px solid #E5E7EB;
-        background: white;
-        color: #374151;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.8);
         font-size: 0.85rem;
         text-decoration: none;
         display: flex;
@@ -78,7 +87,11 @@
         gap: 0.4rem;
         transition: all 0.2s;
     }
-    .export-btn:hover { background: #F9FAFB; border-color: #D1D5DB; }
+    .export-btn:hover { 
+        background: linear-gradient(135deg, #6366F1, #8B5CF6); 
+        border-color: transparent;
+        color: white;
+    }
     
     .streak-card {
         background: linear-gradient(135deg, #6366F1, #8B5CF6);
@@ -87,6 +100,7 @@
         padding: 2rem;
         text-align: center;
         margin-bottom: 1.5rem;
+        box-shadow: 0 8px 30px rgba(99, 102, 241, 0.3);
     }
     .streak-number {
         font-family: var(--font-mono);
@@ -159,6 +173,50 @@
         cursor: pointer;
     }
     .period-btn.active { background: #4F46E5; color: white; border-color: #4F46E5; }
+    
+    /* Light theme overrides */
+    body.light-theme .analytics-content {
+        color: #1E293B;
+    }
+    body.light-theme .page-title {
+        color: #1E293B !important;
+    }
+    body.light-theme .stat-card {
+        background: white !important;
+        border-color: rgba(0, 0, 0, 0.08) !important;
+    }
+    body.light-theme .stat-label {
+        color: #64748B !important;
+    }
+    body.light-theme .stat-value {
+        color: #1E293B !important;
+    }
+    body.light-theme .chart-card {
+        background: white !important;
+        border-color: rgba(0, 0, 0, 0.08) !important;
+    }
+    body.light-theme .chart-title {
+        color: #1E293B !important;
+    }
+    body.light-theme .export-btn {
+        background: white !important;
+        border-color: #E2E8F0 !important;
+        color: #64748B !important;
+    }
+    body.light-theme .export-btn:hover {
+        background: #6366F1 !important;
+        color: white !important;
+    }
+    body.light-theme .period-btn {
+        background: white !important;
+        border-color: #E2E8F0 !important;
+        color: #64748B !important;
+    }
+    body.light-theme .period-btn.active {
+        background: #6366F1 !important;
+        border-color: #6366F1 !important;
+        color: white !important;
+    }
 </style>
 {% endblock %}
 

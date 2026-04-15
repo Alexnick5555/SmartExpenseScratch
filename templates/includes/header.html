@@ -12,6 +12,10 @@
             <span id="currentDate"></span>
         </div>
 
+        <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
+            <i class="bi bi-moon-stars" id="themeIcon"></i>
+        </button>
+
         <div class="dropdown user-dropdown">
             <button class="user-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
                 <div class="user-avatar">
@@ -32,3 +36,122 @@
         </div>
     </div>
 </header>
+
+<style>
+    .theme-toggle {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.1rem;
+        transition: all 0.3s;
+    }
+    .theme-toggle:hover {
+        background: linear-gradient(135deg, #6366F1, #8B5CF6);
+        border-color: transparent;
+        color: white;
+    }
+    
+    /* Light theme overrides */
+    body.light-theme .main-header {
+        background: white !important;
+        border-bottom: 1px solid #E2E8F0 !important;
+    }
+    body.light-theme .page-title {
+        color: #1E293B !important;
+    }
+    body.light-theme .header-date {
+        background: #F1F5F9 !important;
+        border-color: #E2E8F0 !important;
+        color: #64748B !important;
+    }
+    body.light-theme .header-date i {
+        color: #6366F1 !important;
+        background: none;
+        -webkit-text-fill-color: initial;
+    }
+    body.light-theme .sidebar-toggle {
+        background: #F1F5F9 !important;
+        border-color: #E2E8F0 !important;
+        color: #64748B !important;
+    }
+    body.light-theme .sidebar-toggle:hover {
+        background: #6366F1 !important;
+        color: white !important;
+    }
+    body.light-theme .theme-toggle {
+        background: #F1F5F9 !important;
+        border-color: #E2E8F0 !important;
+        color: #64748B !important;
+    }
+    body.light-theme .theme-toggle:hover {
+        background: #6366F1 !important;
+        color: white !important;
+    }
+    body.light-theme .user-avatar {
+        background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
+    }
+    body.light-theme .user-name {
+        color: #1E293B !important;
+    }
+    body.light-theme .user-btn {
+        background: #F1F5F9 !important;
+        border-color: #E2E8F0 !important;
+    }
+    body.light-theme .user-btn:hover {
+        background: #E2E8F0 !important;
+    }
+    body.light-theme .dropdown-menu {
+        background: white !important;
+        border: 1px solid #E2E8F0 !important;
+    }
+    body.light-theme .dropdown-item {
+        color: #64748B !important;
+    }
+    body.light-theme .dropdown-item:hover {
+        background: rgba(99, 102, 241, 0.08) !important;
+        color: #6366F1 !important;
+    }
+    body.light-theme .dropdown-divider {
+        border-color: #E2E8F0 !important;
+    }
+    body.light-theme .text-danger {
+        color: #EF4444 !important;
+    }
+</style>
+
+<script>
+    // Theme toggle functionality
+    (function() {
+        const toggle = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const body = document.body;
+        
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('smartexpense-theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('light-theme');
+            icon.className = 'bi bi-sun';
+        }
+        
+        if (toggle) {
+            toggle.addEventListener('click', function() {
+                body.classList.toggle('light-theme');
+                
+                if (body.classList.contains('light-theme')) {
+                    icon.className = 'bi bi-sun';
+                    localStorage.setItem('smartexpense-theme', 'dark');
+                } else {
+                    icon.className = 'bi bi-moon-stars';
+                    localStorage.setItem('smartexpense-theme', 'light');
+                }
+            });
+        }
+    })();
+</script>

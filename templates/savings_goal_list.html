@@ -7,23 +7,59 @@
 {% block extra_css %}
 <style>
     .content-area { padding: 2rem; }
-    .page-card { background: white; border-radius: 16px; padding: 1.5rem; }
+    .page-card { 
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px; 
+        padding: 1.5rem; 
+    }
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; }
-    .goal-card { background: #F9FAFB; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; transition: all 0.3s; }
-    .goal-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; color: white; }
+    .goal-card { 
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px; 
+        padding: 1.5rem; 
+        margin-bottom: 1.5rem; 
+        transition: all 0.3s; 
+    }
+    .goal-card:hover { 
+        transform: translateY(-3px); 
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(99, 102, 241, 0.2);
+    }
     .goal-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; }
-    .goal-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; background: rgba(46, 125, 50, 0.1); color: var(--primary); }
-    .goal-name { font-weight: 600; font-size: 1.2rem; margin-bottom: 0.25rem; }
-    .goal-deadline { color: #6B7280; font-size: 0.9rem; }
-    .goal-amounts { display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-family: 'JetBrains Mono', monospace; }
-    .goal-progress { height: 12px; background: #E5E7EB; border-radius: 6px; overflow: hidden; margin-bottom: 0.5rem; }
-    .goal-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; background: linear-gradient(90deg, var(--primary), #43A047); }
-    .goal-percent { font-weight: 600; color: var(--primary); }
+    .goal-icon { 
+        width: 50px; 
+        height: 50px; 
+        border-radius: 12px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-size: 1.5rem; 
+        background: linear-gradient(135deg, #10B981, #34D399);
+        color: white;
+    }
+    .goal-name { font-weight: 600; font-size: 1.2rem; margin-bottom: 0.25rem; color: white; }
+    .goal-deadline { color: rgba(255, 255, 255, 0.5); font-size: 0.9rem; }
+    .goal-amounts { display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-family: 'JetBrains Mono', monospace; color: rgba(255, 255, 255, 0.85); }
+    .goal-progress { height: 12px; background: rgba(255, 255, 255, 0.1); border-radius: 6px; overflow: hidden; margin-bottom: 0.5rem; }
+    .goal-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; background: linear-gradient(90deg, #10B981, #34D399); }
+    .goal-percent { font-weight: 600; color: #34D399; }
     .goal-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
-    .action-btn { padding: 0.4rem 0.75rem; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; font-size: 0.85rem; }
-    .action-btn.edit { background: rgba(21, 101, 192, 0.1); color: #1565C0; }
-    .action-btn.delete { background: rgba(229, 57, 53, 0.1); color: #E53935; }
+    .action-btn { 
+        padding: 0.4rem 0.75rem; 
+        border-radius: 8px; 
+        border: none; 
+        cursor: pointer; 
+        transition: all 0.2s; 
+        font-size: 0.85rem;
+        text-decoration: none;
+    }
+    .action-btn.edit { background: rgba(99, 102, 241, 0.15); color: #818CF8; }
+    .action-btn.delete { background: rgba(239, 68, 68, 0.15); color: #F87171; }
     @media (max-width: 991px) { .main-content { margin-left: 0; } }
 </style>
 {% endblock %}

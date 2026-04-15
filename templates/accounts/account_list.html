@@ -7,21 +7,64 @@
 {% block extra_css %}
 <style>
     .content-area { padding: 2rem; }
-    .page-card { background: white; border-radius: 16px; padding: 1.5rem; }
+    .page-card { 
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px; 
+        padding: 1.5rem; 
+    }
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; }
+    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; color: white; }
     .account-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
-    .account-card { background: #F9FAFB; border-radius: 16px; padding: 1.5rem; transition: all 0.3s; }
-    .account-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+    .account-card { 
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px; 
+        padding: 1.5rem; 
+        transition: all 0.3s; 
+    }
+    .account-card:hover { 
+        transform: translateY(-4px); 
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3); 
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(99, 102, 241, 0.3);
+    }
     .account-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; }
-    .account-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
-    .account-balance { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 600; margin-bottom: 0.5rem; }
-    .account-name { font-weight: 600; font-size: 1.1rem; }
-    .account-type { color: #6B7280; font-size: 0.9rem; }
+    .account-icon { 
+        width: 50px; 
+        height: 50px; 
+        border-radius: 14px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-size: 1.5rem;
+        background: linear-gradient(135deg, #6366F1, #8B5CF6);
+        color: white;
+    }
+    .account-balance { 
+        font-family: 'JetBrains Mono', monospace; 
+        font-size: 1.8rem; 
+        font-weight: 700; 
+        margin-bottom: 0.5rem; 
+        color: white;
+    }
+    .account-name { font-weight: 600; font-size: 1.1rem; color: white; }
+    .account-type { color: rgba(255, 255, 255, 0.5); font-size: 0.9rem; }
     .account-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
-    .action-btn { padding: 0.4rem 0.75rem; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; font-size: 0.85rem; }
-    .action-btn.edit { background: rgba(21, 101, 192, 0.1); color: #1565C0; }
-    .action-btn.delete { background: rgba(229, 57, 53, 0.1); color: #E53935; }
+    .action-btn { 
+        padding: 0.4rem 0.75rem; 
+        border-radius: 8px; 
+        border: none; 
+        cursor: pointer; 
+        transition: all 0.2s; 
+        font-size: 0.85rem;
+        text-decoration: none;
+    }
+    .action-btn.edit { background: rgba(99, 102, 241, 0.15); color: #818CF8; }
+    .action-btn.delete { background: rgba(239, 68, 68, 0.15); color: #F87171; }
+    .action-btn:hover { transform: scale(1.05); }
+    .text-muted { color: rgba(255, 255, 255, 0.4) !important; }
     @media (max-width: 991px) { .main-content { margin-left: 0; } }
 </style>
 {% endblock %}

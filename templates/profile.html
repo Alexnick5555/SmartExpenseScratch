@@ -7,17 +7,41 @@
 {% block extra_css %}
 <style>
     .content-area { padding: 2rem; }
-    .page-card { background: white; border-radius: 16px; padding: 2rem; max-width: 800px; margin: 0 auto; }
-    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; }
-    .profile-header { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #E5E7EB; }
-    .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #1B5E20); color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 600; }
-    .profile-info h3 { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; }
-    .profile-info p { color: #6B7280; margin: 0; }
+    .page-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 2rem; max-width: 800px; margin: 0 auto; }
+    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; color: white; }
+    .profile-header { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+    .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #8B5CF6); color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 600; }
+    .profile-info h3 { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; color: white; }
+    .profile-info p { color: rgba(255, 255, 255, 0.6); margin: 0; }
     .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
-    .stat-box { background: #F9FAFB; padding: 1.25rem; border-radius: 12px; text-align: center; }
-    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 600; color: var(--primary); }
-    .stat-label { color: #6B7280; font-size: 0.9rem; }
+    .stat-box { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 1.25rem; border-radius: 12px; text-align: center; }
+    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 600; color: #818CF8; }
+    .stat-label { color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; }
+    
+    .form-label { color: rgba(255, 255, 255, 0.8); font-weight: 500; }
+    .form-control, .form-select { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: white; }
+    .form-control:focus, .form-select:focus { background: rgba(255, 255, 255, 0.12); border-color: #6366F1; color: white; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15); }
+    .form-control::placeholder { color: rgba(255, 255, 255, 0.4); }
+    .form-select option { background: #1E293B; color: white; }
+    .form-check-label { color: rgba(255, 255, 255, 0.8); }
+    
     @media (max-width: 991px) { .main-content { margin-left: 0; } }
+    
+    /* Light theme overrides */
+    body.light-theme .page-card { background: white !important; border-color: rgba(0, 0, 0, 0.08) !important; }
+    body.light-theme .page-title { color: #1E293B !important; }
+    body.light-theme .profile-header { border-color: rgba(0, 0, 0, 0.08) !important; }
+    body.light-theme .profile-info h3 { color: #1E293B !important; }
+    body.light-theme .profile-info p { color: #64748B !important; }
+    body.light-theme .stat-box { background: #F8FAFC !important; border-color: rgba(0, 0, 0, 0.06) !important; }
+    body.light-theme .stat-value { color: #6366F1 !important; }
+    body.light-theme .stat-label { color: #64748B !important; }
+    body.light-theme .form-label { color: #374151 !important; }
+    body.light-theme .form-control, body.light-theme .form-select { background: white !important; border-color: #E2E8F0 !important; color: #1E293B !important; }
+    body.light-theme .form-control:focus, body.light-theme .form-select:focus { background: white !important; color: #1E293B !important; }
+    body.light-theme .form-control::placeholder { color: #94A3B8; }
+    body.light-theme .form-select option { background: white; color: #1E293B; }
+    body.light-theme .form-check-label { color: #374151 !important; }
 </style>
 {% endblock %}
 

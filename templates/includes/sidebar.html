@@ -70,9 +70,7 @@
                     <i class="bi bi-calendar3"></i>
                     <span>Calendar</span>
                     {% if bill_reminders %}
-                    <span style="background:#EF4444;color:white;border-radius:50%;width:18px;height:18px;font-size:0.7rem;display:inline-flex;align-items:center;justify-content:center;margin-left:auto;font-weight:700">
-                        {{ bill_reminders|length }}
-                    </span>
+                    <span class="nav-badge">{{ bill_reminders|length }}</span>
                     {% endif %}
                 </a>
             </li>

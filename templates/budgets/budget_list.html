@@ -7,20 +7,62 @@
 {% block extra_css %}
 <style>
     .content-area { padding: 2rem; }
-    .page-card { background: white; border-radius: 16px; padding: 1.5rem; }
+    .page-card { 
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px; 
+        padding: 1.5rem; 
+    }
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; }
+    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; color: white; }
     .month-selector { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
     .month-nav { display: flex; align-items: center; gap: 0.5rem; }
-    .budget-item { background: #F9FAFB; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+    .month-nav a {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+    }
+    .month-nav a:hover {
+        background: linear-gradient(135deg, #6366F1, #8B5CF6);
+        border-color: transparent;
+        color: white;
+    }
+    .month-nav span {
+        color: white;
+        font-weight: 600;
+    }
+    .budget-item { 
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 14px; 
+        padding: 1.25rem; 
+        margin-bottom: 1rem;
+        transition: all 0.3s;
+    }
+    .budget-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(99, 102, 241, 0.2);
+    }
     .budget-header { display: flex; justify-content: space-between; margin-bottom: 0.75rem; }
-    .budget-category { font-weight: 600; font-size: 1.1rem; }
-    .budget-values { font-family: 'JetBrains Mono', monospace; }
-    .budget-bar { height: 10px; background: #E5E7EB; border-radius: 5px; overflow: hidden; margin-bottom: 0.5rem; }
+    .budget-category { font-weight: 600; font-size: 1.1rem; color: white; }
+    .budget-values { font-family: 'JetBrains Mono', monospace; color: rgba(255, 255, 255, 0.7); }
+    .budget-bar { height: 10px; background: rgba(255, 255, 255, 0.1); border-radius: 5px; overflow: hidden; margin-bottom: 0.5rem; }
     .budget-fill { height: 100%; border-radius: 5px; transition: width 0.5s ease; }
-    .budget-footer { display: flex; justify-content: space-between; font-size: 0.9rem; color: #6B7280; }
-    .over-budget { color: #E53935; font-weight: 600; }
-    .summary-row { display: flex; justify-content: space-between; padding: 1rem; background: rgba(46, 125, 50, 0.1); border-radius: 12px; margin-top: 1rem; font-weight: 600; }
+    .budget-footer { display: flex; justify-content: space-between; font-size: 0.9rem; color: rgba(255, 255, 255, 0.5); }
+    .over-budget { color: #F87171; font-weight: 600; }
+    .summary-row { 
+        display: flex; 
+        justify-content: space-between; 
+        padding: 1rem; 
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.1)); 
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        border-radius: 12px; 
+        margin-top: 1rem; 
+        font-weight: 600;
+        color: white;
+    }
     @media (max-width: 991px) { .main-content { margin-left: 0; } }
 </style>
 {% endblock %}

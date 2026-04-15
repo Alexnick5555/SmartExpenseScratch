@@ -7,28 +7,68 @@
 {% block extra_css %}
 <style>
     .content-area { padding: 2rem; }
-    .page-card { background: white; border-radius: 16px; padding: 1.5rem; }
+    .page-card { 
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px; 
+        padding: 1.5rem; 
+    }
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
-    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; }
+    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; color: white; }
     .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
-    .summary-item { background: linear-gradient(135deg, #22C55E, #16A34A); color: white; padding: 1.5rem; border-radius: 12px; text-align: center; }
-    .summary-item.blue { background: linear-gradient(135deg, #EF4444, #DC2626); }
-    .summary-item.orange { background: linear-gradient(135deg, #F59E0B, #D97706); }
+    .summary-item { 
+        background: linear-gradient(135deg, #10B981, #059669); 
+        color: white; 
+        padding: 1.5rem; 
+        border-radius: 12px; 
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+    .summary-item.blue { background: linear-gradient(135deg, #EF4444, #DC2626); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
+    .summary-item.orange { background: linear-gradient(135deg, #F59E0B, #D97706); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); }
     .summary-value { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 600; }
     .summary-label { opacity: 0.9; }
     .chart-container { position: relative; height: 300px; margin-bottom: 1.5rem; }
     .breakdown-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    .breakdown-card { background: #F8FAFC; border-radius: 12px; padding: 1rem; }
-    .breakdown-card h5 { margin-bottom: 0.75rem; font-weight: 600; }
-    .category-row { display: flex; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #E5E7EB; }
+    .breakdown-card { 
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px; 
+        padding: 1rem; 
+    }
+    .breakdown-card h5 { margin-bottom: 0.75rem; font-weight: 600; color: white; }
+    .category-row { display: flex; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
     .category-row:last-child { border-bottom: none; }
     .category-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 0.75rem; }
-    .category-name { flex: 1; font-weight: 500; }
-    .category-amount { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+    .category-name { flex: 1; font-weight: 500; color: rgba(255, 255, 255, 0.85); }
+    .category-amount { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: white; }
     @media (max-width: 991px) { 
         .main-content { margin-left: 0; } 
         .summary-grid { grid-template-columns: 1fr; }
         .breakdown-grid { grid-template-columns: 1fr; }
+    }
+    
+    /* Light theme overrides */
+    body.light-theme .page-card {
+        background: white !important;
+        border-color: rgba(0, 0, 0, 0.08) !important;
+    }
+    body.light-theme .page-title {
+        color: #1E293B !important;
+    }
+    body.light-theme .breakdown-card {
+        background: #F8FAFC !important;
+        border-color: #E2E8F0 !important;
+    }
+    body.light-theme .breakdown-card h5 {
+        color: #1E293B !important;
+    }
+    body.light-theme .category-name {
+        color: #1E293B !important;
+    }
+    body.light-theme .category-amount {
+        color: #1E293B !important;
     }
 </style>
 {% endblock %}
