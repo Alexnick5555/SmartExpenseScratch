@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - SmartExpense{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .content-area { padding: 2rem; max-width: 800px; margin: 0 auto; }
+    .page-card { 
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px; 
+        padding: 2rem; 
+    }
+    .form-card-title { 
+        font-family: 'Poppins', sans-serif; 
+        font-size: 1.5rem; 
+        font-weight: 600; 
+        margin-bottom: 1.5rem; 
+        color: white;
+    }
+    .form-label {
+        color: rgba(255, 255, 255, 0.85);
+        font-weight: 600;
+    }
+    .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: white;
+        border-radius: 10px;
+        padding: 0.75rem;
+    }
+    .form-control:focus, .form-select:focus {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: #6366F1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        color: white;
+    }
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+    }
+    .form-select option {
+        background: #1E293B;
+        color: white;
+    }
+    .form-check-input:checked {
+        background-color: #6366F1;
+        border-color: #6366F1;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #6366F1, #8B5CF6);
+        border: none;
+        border-radius: 10px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+    }
+    .btn-outline-secondary {
+        border-color: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.6);
+        border-radius: 10px;
+    }
+    .btn-outline-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+    .help-text {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+    @media (max-width: 991px) { .main-content { margin-left: 0; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="content-area">
+        <div class="page-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="form-card-title mb-0">
+                    <i class="bi bi-{% if 'Add' in title %}plus-circle{% else %}pencil{% endif %} me-2"></i>{{ title }}
+                </h2>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Template Name *</label>
+                        {{ form.name }}
+                        <small class="help-text">Give your template a descriptive name (e.g., "Monthly Grocery Run")</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Amount (₹) *</label>
+                        {{ form.amount }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Transaction Type *</label>
+                        {{ form.transaction_type }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Category</label>
+                        {{ form.category }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Account</label>
+                    {{ form.account }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    {{ form.description }}
+                    <small class="help-text">Optional description for this template</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Tags</label>
+                    {{ form.tags }}
+                    <small class="help-text">Comma-separated tags (e.g., groceries, weekly)</small>
+                </div>
+                <div class="mb-4">
+                    <div class="form-check">
+                        {{ form.is_favorite }}
+                        <label class="form-check-label" for="{{ form.is_favorite.id_for_label }}">
+                            <i class="bi bi-star me-2"></i>Mark as Favorite
+                        </label>
+                    </div>
+                    <small class="help-text">Favorite templates appear first in the list</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-2"></i>Save Template
+                    </button>
+                    <a href="{% url 'template_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock %}

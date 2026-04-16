@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Top Spending Analysis - SmartExpense{% endblock %}
+{% block page_title %}Top Spending Analysis{% endblock %}
+
+{% block extra_css %}
+<style>
+    .content-area { padding: 2rem; }
+    .page-card { 
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px; 
+        padding: 2rem; 
+    }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; color: white; }
+    .analysis-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    .analysis-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 1.5rem;
+    }
+    .card-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .card-title i {
+        color: #6366F1;
+    }
+    .top-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .top-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.2s;
+    }
+    .top-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+    .top-item:last-child {
+        border-bottom: none;
+    }
+    .item-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex: 1;
+    }
+    .item-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    .item-details {
+        flex: 1;
+    }
+    .item-name {
+        font-weight: 600;
+        color: white;
+        margin-bottom: 0.25rem;
+    }
+    .item-count {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+    .item-amount {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #F87171;
+    }
+    .item-bar {
+        width: 100%;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+    .item-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #6366F1, #8B5CF6);
+        border-radius: 4px;
+        transition: width 0.5s ease;
+    }
+    .controls {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+    }
+    .form-select {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: white;
+        border-radius: 10px;
+        padding: 0.5rem 1rem;
+    }
+    .form-select:focus {
+        border-color: #6366F1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    }
+    .form-select option {
+        background: #1E293B;
+        color: white;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+    .empty-state i {
+        font-size: 4rem;
+        opacity: 0.3;
+        margin-bottom: 1rem;
+    }
+    @media (max-width: 767px) {
+        .analysis-grid {
+            grid-template-columns: 1fr;
+        }
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="content-area">
+        <div class="page-card">
+            <div class="page-header">
+                <h2 class="page-title"><i class="bi bi-bar-chart me-2"></i>Top Spending Analysis</h2>
+                <div class="controls">
+                    <form method="get" class="d-flex gap-2 align-items-center">
+                        <label class="text-white me-2">Last</label>
+                        <select name="days" class="form-select">
+                            <option value="7" {% if days_back == 7 %}selected{% endif %}>7 days</option>
+                            <option value="30" {% if days_back == 30 %}selected{% endif %}>30 days</option>
+                            <option value="90" {% if days_back == 90 %}selected{% endif %}>90 days</option>
+                            <option value="180" {% if days_back == 180 %}selected{% endif %}>180 days</option>
+                            <option value="365" {% if days_back == 365 %}selected{% endif %}>1 year</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Update
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% if top_categories or top_merchants or day_of_week_spending %}
+                <div class="analysis-grid">
+                    <!-- Top Categories -->
+                    <div class="analysis-card">
+                        <div class="card-title">
+                            <i class="bi bi-tag"></i>
+                            Top 5 Categories
+                        </div>
+                        <ul class="top-list">
+                            {% for item in top_categories %}
+                                <li class="top-item">
+                                    <div class="item-info">
+                                        <div class="item-icon" style="background: {{ item.category__color }}20; color: {{ item.category__color }};">
+                                            <i class="bi {{ item.category__icon }}"></i>
+                                        </div>
+                                        <div class="item-details">
+                                            <div class="item-name">{{ item.category__name }}</div>
+                                            <div class="item-count">{{ item.count }} transactions</div>
+                                        </div>
+                                    </div>
+                                    <div class="item-amount">₹{{ item.total|floatformat:0 }}</div>
+                                    <div class="item-bar">
+                                        <div class="item-bar-fill" style="width: {{ item.total|floatformat:0 }}%;"></div>
+                                    </div>
+                                </li>
+                            {% empty %}
+                                <li class="top-item">
+                                    <div class="text-muted">No category data available</div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- Top Merchants -->
+                    <div class="analysis-card">
+                        <div class="card-title">
+                            <i class="bi bi-shop"></i>
+                            Top 5 Merchants
+                        </div>
+                        <ul class="top-list">
+                            {% for item in top_merchants %}
+                                <li class="top-item">
+                                    <div class="item-info">
+                                        <div class="item-icon" style="background: rgba(99, 102, 241, 0.2); color: #818CF8;">
+                                            <i class="bi bi-receipt"></i>
+                                        </div>
+                                        <div class="item-details">
+                                            <div class="item-name">{{ item.description|truncatechars:30 }}</div>
+                                            <div class="item-count">{{ item.count }} transactions</div>
+                                        </div>
+                                    </div>
+                                    <div class="item-amount">₹{{ item.total|floatformat:0 }}</div>
+                                    <div class="item-bar">
+                                        <div class="item-bar-fill" style="width: {{ item.total|floatformat:0 }}%;"></div>
+                                    </div>
+                                </li>
+                            {% empty %}
+                                <li class="top-item">
+                                    <div class="text-muted">No merchant data available</div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- Day of Week Spending -->
+                    <div class="analysis-card">
+                        <div class="card-title">
+                            <i class="bi bi-calendar-week"></i>
+                            Spending by Day of Week
+                        </div>
+                        <ul class="top-list">
+                            {% for item in day_of_week_spending %}
+                                <li class="top-item">
+                                    <div class="item-info">
+                                        <div class="item-details">
+                                            <div class="item-name">{{ day_names|default:"" }}</div>
+                                            <div class="item-count">{{ item.count }} transactions</div>
+                                        </div>
+                                    </div>
+                                    <div class="item-amount">₹{{ item.total|floatformat:0 }}</div>
+                                    <div class="item-bar">
+                                        <div class="item-bar-fill" style="width: {{ item.total|floatformat:0 }}%;"></div>
+                                    </div>
+                                </li>
+                            {% empty %}
+                                <li class="top-item">
+                                    <div class="text-muted">No day data available</div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="text-center text-muted small">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Showing spending from {{ start_date|date:'M d, Y' }} to {{ end_date|date:'M d, Y' }}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-bar-chart"></i>
+                    <p>No spending data available</p>
+                    <p>Add some expenses to see your spending analysis!</p>
+                    <a href="{% url 'expense_add' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-2"></i>Add First Expense
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,371 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Recurring Transactions - SmartExpense{% endblock %}
+
+{% block extra_css %}
+<style>
+    .recurring-container {
+        padding: 2rem 0;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .page-header h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .page-header p {
+        color: #94A3B8;
+        margin-bottom: 0;
+    }
+    
+    .filter-bar {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .filter-select {
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.05);
+        color: #E2E8F0;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+    
+    .recurring-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .recurring-card {
+        background: #1E293B;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+        position: relative;
+    }
+    
+    .recurring-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .recurring-card .status-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .recurring-card .status-badge.active {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10B981;
+    }
+    
+    .recurring-card .status-badge.paused {
+        background: rgba(251, 191, 36, 0.2);
+        color: #FBBF24;
+    }
+    
+    .recurring-card .status-badge.completed {
+        background: rgba(107, 114, 128, 0.2);
+        color: #94A3B8;
+    }
+    
+    .recurring-card .header {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .recurring-card .icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .recurring-card .icon.expense {
+        background: rgba(239, 68, 68, 0.2);
+        color: #EF4444;
+    }
+    
+    .recurring-card .icon.income {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10B981;
+    }
+    
+    .recurring-card .info {
+        flex: 1;
+    }
+    
+    .recurring-card .name {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .recurring-card .category {
+        font-size: 0.875rem;
+        color: #94A3B8;
+    }
+    
+    .recurring-card .amount {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    .recurring-card .amount.expense {
+        color: #EF4444;
+    }
+    
+    .recurring-card .amount.income {
+        color: #10B981;
+    }
+    
+    .recurring-card .details {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .recurring-card .detail-item {
+        font-size: 0.875rem;
+    }
+    
+    .recurring-card .detail-label {
+        color: #94A3B8;
+        margin-bottom: 0.25rem;
+    }
+    
+    .recurring-card .detail-value {
+        font-weight: 500;
+    }
+    
+    .recurring-card .detail-value.overdue {
+        color: #EF4444;
+    }
+    
+    .recurring-card .detail-value.due-soon {
+        color: #FBBF24;
+    }
+    
+    .recurring-card .actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .recurring-card .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    
+    .recurring-card .btn-primary {
+        background: #3B82F6;
+        border-color: #3B82F6;
+        color: white;
+    }
+    
+    .recurring-card .btn-primary:hover {
+        background: #2563EB;
+    }
+    
+    .recurring-card .btn-warning {
+        background: rgba(251, 191, 36, 0.2);
+        border-color: rgba(251, 191, 36, 0.3);
+        color: #FBBF24;
+    }
+    
+    .recurring-card .btn-warning:hover {
+        background: rgba(251, 191, 36, 0.3);
+    }
+    
+    .recurring-card .btn-success {
+        background: rgba(16, 185, 129, 0.2);
+        border-color: rgba(16, 185, 129, 0.3);
+        color: #10B981;
+    }
+    
+    .recurring-card .btn-success:hover {
+        background: rgba(16, 185, 129, 0.3);
+    }
+    
+    .recurring-card .btn-danger {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #EF4444;
+    }
+    
+    .recurring-card .btn-danger:hover {
+        background: rgba(239, 68, 68, 0.3);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #94A3B8;
+    }
+    
+    .empty-state .icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    .empty-state h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #E2E8F0;
+    }
+    
+    @media (max-width: 768px) {
+        .page-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .recurring-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="dashboard-content">
+        <div class="recurring-container">
+            <div class="container">
+        <div class="page-header">
+            <div>
+                <h1>Recurring Transactions</h1>
+                <p>Automate your recurring bills and payments</p>
+            </div>
+            <div class="filter-bar">
+                <select class="filter-select" onchange="location.href='?status='+this.value">
+                    <option value="">All Status</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                    <option value="paused" {% if status_filter == 'paused' %}selected{% endif %}>Paused</option>
+                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                </select>
+                <a href="{% url 'recurring_transaction_add' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-2"></i>Add Recurring
+                </a>
+            </div>
+        </div>
+        
+        {% if recurring_transactions %}
+        <div class="recurring-grid">
+            {% for rt in recurring_transactions %}
+            <div class="recurring-card">
+                <span class="status-badge {{ rt.status }}">{{ rt.status }}</span>
+                
+                <div class="header">
+                    <div class="icon {{ rt.transaction_type }}">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </div>
+                    <div class="info">
+                        <div class="name">{{ rt.name }}</div>
+                        <div class="category">{{ rt.category.name|default:'No category' }}</div>
+                    </div>
+                </div>
+                
+                <div class="amount {{ rt.transaction_type }}">
+                    {% if rt.transaction_type == 'expense' %}-{% else %}+{% endif %}₹{{ rt.amount|floatformat:2 }}
+                </div>
+                
+                <div class="details">
+                    <div class="detail-item">
+                        <div class="detail-label">Frequency</div>
+                        <div class="detail-value">{{ rt.get_frequency_display }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Next Due</div>
+                        <div class="detail-value {% if rt.is_overdue %}overdue{% elif rt.days_until_due <= 3 %}due-soon{% endif %}">
+                            {{ rt.next_due_date|date:"M d, Y" }}
+                            {% if rt.days_until_due is not None %}
+                            ({{ rt.days_until_due }} days)
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Account</div>
+                        <div class="detail-value">{{ rt.account.name|default:'No account' }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Last Processed</div>
+                        <div class="detail-value">{{ rt.last_processed_date|date:"M d, Y"|default:'Never' }}</div>
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    {% if rt.status == 'active' %}
+                    <a href="{% url 'recurring_transaction_process' rt.pk %}" class="btn btn-primary">
+                        <i class="bi bi-play-fill me-1"></i>Process Now
+                    </a>
+                    <a href="{% url 'recurring_transaction_pause' rt.pk %}" class="btn btn-warning">
+                        <i class="bi bi-pause-fill me-1"></i>Pause
+                    </a>
+                    {% elif rt.status == 'paused' %}
+                    <a href="{% url 'recurring_transaction_resume' rt.pk %}" class="btn btn-success">
+                        <i class="bi bi-play-fill me-1"></i>Resume
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'recurring_transaction_edit' rt.pk %}" class="btn btn-primary">
+                        <i class="bi bi-pencil me-1"></i>Edit
+                    </a>
+                    <a href="{% url 'recurring_transaction_delete' rt.pk %}" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Delete
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon">
+                <i class="bi bi-arrow-repeat"></i>
+            </div>
+            <h3>No recurring transactions found</h3>
+            <p>Create your first recurring transaction to automate your bills and payments.</p>
+            <a href="{% url 'recurring_transaction_add' %}" class="btn btn-primary mt-3">
+                <i class="bi bi-plus-lg me-2"></i>Add Recurring Transaction
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    </div>
+</main>
+{% endblock %}

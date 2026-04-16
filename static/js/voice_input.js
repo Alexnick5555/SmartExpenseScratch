@@ -41,6 +41,38 @@ const VoiceInput = (() => {
     const INCOME_WORDS  = ['received', 'receive', 'earned', 'earn', 'got', 'income',
                            'salary', 'credited', 'deposited', 'transferred to me', 'payment received'];
 
+    // Voice command patterns
+    const COMMAND_PATTERNS = {
+        // Navigation commands
+        'dashboard': ['go to dashboard', 'show dashboard', 'open dashboard', 'dashboard'],
+        'expenses': ['go to expenses', 'show expenses', 'open expenses', 'expenses', 'my expenses'],
+        'income': ['go to income', 'show income', 'open income', 'income', 'my income'],
+        'accounts': ['go to accounts', 'show accounts', 'open accounts', 'accounts', 'my accounts'],
+        'reports': ['go to reports', 'show reports', 'open reports', 'reports'],
+        'analytics': ['go to analytics', 'show analytics', 'open analytics', 'analytics'],
+        'templates': ['go to templates', 'show templates', 'open templates', 'templates'],
+        'recurring': ['go to recurring', 'show recurring', 'open recurring', 'recurring', 'recurring transactions'],
+        'calendar': ['go to calendar', 'show calendar', 'open calendar', 'calendar'],
+        'settings': ['go to settings', 'show settings', 'open settings', 'settings'],
+        'profile': ['go to profile', 'show profile', 'open profile', 'profile'],
+        
+        // Action commands
+        'add_expense': ['add expense', 'new expense', 'create expense', 'expense add'],
+        'add_income': ['add income', 'new income', 'create income', 'income add'],
+        'quick_add': ['quick add', 'quick expense', 'quick income'],
+        
+        // Query commands
+        'show_balance': ['show balance', 'my balance', 'what is my balance', 'check balance'],
+        'show_spending': ['show spending', 'my spending', 'what did i spend', 'total spending'],
+        'show_income': ['show income', 'my income', 'what did i earn', 'total income'],
+        'show_savings': ['show savings', 'my savings', 'how much did i save'],
+        'show_net_worth': ['show net worth', 'my net worth', 'what is my net worth'],
+        
+        // Utility commands
+        'help': ['help', 'what can i say', 'voice commands', 'commands'],
+        'stop': ['stop', 'cancel', 'never mind', 'forget it'],
+    };
+
     // ── Parsers ────────────────────────────────────────────────────────────────
 
     function extractAmount(text) {
@@ -365,8 +397,496 @@ const VoiceInput = (() => {
         return btn;
     }
 
+    // ── Command Processor ────────────────────────────────────────────────────────
+
+    function detectCommand(text) {
+        const lower = text.toLowerCase();
+        
+        for (const [command, patterns] of Object.entries(COMMAND_PATTERNS)) {
+            for (const pattern of patterns) {
+                if (lower.includes(pattern)) {
+                    return command;
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    function executeCommand(command) {
+        if (!command) return false;
+        
+        const routes = {
+            'dashboard': '/dashboard/',
+            'expenses': '/expenses/',
+            'income': '/income/',
+            'accounts': '/accounts/',
+            'reports': '/reports/',
+            'analytics': '/analytics/',
+            'templates': '/templates/',
+            'recurring': '/recurring/',
+            'calendar': '/financial-calendar/',
+            'settings': '/settings/',
+            'profile': '/profile/',
+            'add_expense': '/expenses/add/',
+            'add_income': '/income/add/',
+            'quick_add': '/quick-add-expense/',
+        };
+        
+        if (routes[command]) {
+            window.location.href = routes[command];
+            return true;
+        }
+        
+        // Handle query commands
+        if (command === 'show_balance' || command === 'show_spending' ||
+            command === 'show_income' || command === 'show_savings' ||
+            command === 'show_net_worth') {
+            window.location.href = '/dashboard/';
+            return true;
+        }
+        
+        // Handle help command
+        if (command === 'help') {
+            showVoiceHelp();
+            return true;
+        }
+        
+        return false;
+    }
+
+    function showVoiceHelp() {
+        const helpModal = document.createElement('div');
+        helpModal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+        
+        helpModal.innerHTML = `
+            <div style="
+                background: #1E293B;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 16px;
+                padding: 2rem;
+                max-width: 600px;
+                max-height: 80vh;
+                overflow-y: auto;
+                color: #E2E8F0;
+            ">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2 style="font-size: 1.5rem; font-weight: 600; margin: 0;">Voice Commands</h2>
+                    <button id="closeVoiceHelp" style="
+                        background: none;
+                        border: none;
+                        color: #94A3B8;
+                        font-size: 1.5rem;
+                        cursor: pointer;
+                        padding: 0.5rem;
+                    ">&times;</button>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.75rem; color: #3B82F6;">Navigation</h3>
+                    <ul style="list-style: none; padding: 0; margin: 0; color: #94A3B8;">
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <strong style="color: #E2E8F0;">"Go to dashboard"</strong> - Open dashboard
+                        </li>
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <strong style="color: #E2E8F0;">"Show expenses"</strong> - View expenses list
+                        </li>
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <strong style="color: #E2E8F0;">"Go to reports"</strong> - Open reports page
+                        </li>
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <strong style="color: #E2E8F0;">"Open analytics"</strong> - View analytics
+                        </li>
+                        <li style="padding: 0.5rem 0;">
+                            <strong style="color: #E2E8F0;">"Go to settings"</strong> - Open settings
+                        </li>
+                    </ul>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.75rem; color: #10B981;">Actions</h3>
+                    <ul style="list-style: none; padding: 0; margin: 0; color: #94A3B8;">
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <strong style="color: #E2E8F0;">"Add expense"</strong> - Create new expense
+                        </li>
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <strong style="color: #E2E8F0;">"Add income"</strong> - Create new income
+                        </li>
+                        <li style="padding: 0.5rem 0;">
+                            <strong style="color: #E2E8F0;">"Quick add"</strong> - Quick add transaction
+                        </li>
+                    </ul>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.75rem; color: #FBBF24;">Queries</h3>
+                    <ul style="list-style: none; padding: 0; margin: 0; color: #94A3B8;">
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <strong style="color: #E2E8F0;">"Show my balance"</strong> - View account balances
+                        </li>
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <strong style="color: #E2E8F0;">"What did I spend"</strong> - View spending summary
+                        </li>
+                        <li style="padding: 0.5rem 0;">
+                            <strong style="color: #E2E8F0;">"Show my net worth"</strong> - View net worth
+                        </li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.75rem; color: #EF4444;">Transaction Entry</h3>
+                    <p style="color: #94A3B8; margin-bottom: 0.5rem;">Say transactions like:</p>
+                    <ul style="list-style: none; padding: 0; margin: 0; color: #94A3B8;">
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            "Spent 500 on food at restaurant"
+                        </li>
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            "Paid 2000 for electricity bill"
+                        </li>
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            "Received 50000 salary"
+                        </li>
+                        <li style="padding: 0.5rem 0;">
+                            "Bought clothes for 3000"
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(helpModal);
+        
+        document.getElementById('closeVoiceHelp').addEventListener('click', () => {
+            document.body.removeChild(helpModal);
+        });
+        
+        helpModal.addEventListener('click', (e) => {
+            if (e.target === helpModal) {
+                document.body.removeChild(helpModal);
+            }
+        });
+    }
+
+    // ── Enhanced Voice Command Button ───────────────────────────────────────────
+
+    function createCommandButton(options = {}) {
+        const {
+            onCommand,
+            onTranscript,
+        } = options;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-voice-command';
+        btn.title = 'Click and speak a command';
+        btn.innerHTML = `<i class="bi bi-mic-fill"></i><span class="voice-label">Voice Command</span>`;
+
+        // Inject button styles once
+        if (!document.getElementById('voice-cmd-btn-style')) {
+            const style = document.createElement('style');
+            style.id = 'voice-cmd-btn-style';
+            style.textContent = `
+                .btn-voice-command {
+                    background: linear-gradient(135deg, #7C3AED, #4F46E5);
+                    color: white;
+                    border: none;
+                    border-radius: 50px;
+                    padding: 0.75rem 1.5rem;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    font-size: 0.95rem;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+                }
+                .btn-voice-command:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+                }
+                .btn-voice-command.listening {
+                    background: linear-gradient(135deg, #DC2626, #B91C1C);
+                    animation: voiceCmdPulse 1.5s infinite;
+                    box-shadow: 0 4px 20px rgba(220, 38, 38, 0.6);
+                }
+                @keyframes voiceCmdPulse {
+                    0%,100% { transform: scale(1); box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4); }
+                    50%      { transform: scale(1.05); box-shadow: 0 6px 25px rgba(220, 38, 38, 0.6); }
+                }
+                .voice-command-fab {
+                    position: fixed;
+                    bottom: 30px;
+                    right: 30px;
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, #7C3AED, #4F46E5);
+                    color: white;
+                    border: none;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.5rem;
+                    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.5);
+                    transition: all 0.3s;
+                    z-index: 9999;
+                }
+                .voice-command-fab:hover {
+                    transform: scale(1.1);
+                    box-shadow: 0 6px 30px rgba(124, 58, 237, 0.6);
+                }
+                .voice-command-fab.listening {
+                    background: linear-gradient(135deg, #DC2626, #B91C1C);
+                    animation: fabPulse 1.5s infinite;
+                }
+                @keyframes fabPulse {
+                    0%,100% { transform: scale(1); }
+                    50%      { transform: scale(1.15); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        const rec = createRecognizer();
+        if (!rec) {
+            btn.disabled = true;
+            btn.title = 'Voice commands not supported in this browser';
+            return btn;
+        }
+
+        let listening = false;
+
+        btn.addEventListener('click', () => {
+            if (listening) { rec.stop(); return; }
+            rec.start();
+        });
+
+        rec.onstart = () => {
+            listening = true;
+            btn.classList.add('listening');
+            btn.querySelector('.voice-label').textContent = 'Listening…';
+            btn.querySelector('i').className = 'bi bi-mic-mute-fill';
+        };
+
+        rec.onend = () => {
+            listening = false;
+            btn.classList.remove('listening');
+            btn.querySelector('.voice-label').textContent = 'Voice Command';
+            btn.querySelector('i').className = 'bi bi-mic-fill';
+        };
+
+        rec.onerror = (e) => {
+            console.warn('Voice recognition error:', e.error);
+            btn.classList.remove('listening');
+            btn.querySelector('.voice-label').textContent = 'Voice Command';
+            btn.querySelector('i').className = 'bi bi-mic-fill';
+            if (typeof SmartExpense !== 'undefined') {
+                SmartExpense.showToast('Could not capture voice. Please try again.', 'warning');
+            }
+        };
+
+        rec.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            if (onTranscript) onTranscript(transcript);
+
+            // First check for commands
+            const command = detectCommand(transcript);
+            if (command) {
+                if (executeCommand(command)) {
+                    if (typeof SmartExpense !== 'undefined') {
+                        SmartExpense.showToast(`Executing: "${transcript}"`, 'success');
+                    }
+                    if (onCommand) onCommand(command, transcript);
+                    return;
+                }
+            }
+
+            // If no command detected, try to parse as transaction
+            const catSelectEl = document.querySelector('#id_category');
+            const result = parse(transcript, catSelectEl);
+
+            if (result.amount || result.categoryValue) {
+                // Navigate to add expense/income form with pre-filled data
+                const type = result.type || 'expense';
+                const url = type === 'income' ? '/income/add/' : '/expenses/add/';
+                
+                // Store data in sessionStorage for pre-filling
+                sessionStorage.setItem('voiceTransactionData', JSON.stringify(result));
+                
+                if (typeof SmartExpense !== 'undefined') {
+                    SmartExpense.showToast(`Adding ${type}: "${transcript}"`, 'success');
+                }
+                
+                window.location.href = url;
+            } else {
+                if (typeof SmartExpense !== 'undefined') {
+                    SmartExpense.showToast('Could not understand. Try "help" for commands.', 'warning');
+                }
+            }
+
+            if (onCommand) onCommand(null, transcript);
+        };
+
+        return btn;
+    }
+
+    // ── Floating Action Button ─────────────────────────────────────────────────
+
+    function createFloatingButton() {
+        const fab = document.createElement('button');
+        fab.type = 'button';
+        fab.className = 'voice-command-fab';
+        fab.title = 'Voice Commands';
+        fab.innerHTML = '<i class="bi bi-mic-fill"></i>';
+
+        const rec = createRecognizer();
+        if (!rec) {
+            fab.style.display = 'none';
+            return fab;
+        }
+
+        let listening = false;
+
+        fab.addEventListener('click', () => {
+            if (listening) { rec.stop(); return; }
+            rec.start();
+        });
+
+        rec.onstart = () => {
+            listening = true;
+            fab.classList.add('listening');
+        };
+
+        rec.onend = () => {
+            listening = false;
+            fab.classList.remove('listening');
+        };
+
+        rec.onerror = (e) => {
+            console.warn('Voice recognition error:', e.error);
+            fab.classList.remove('listening');
+        };
+
+        rec.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+
+            // Check for commands
+            const command = detectCommand(transcript);
+            if (command) {
+                executeCommand(command);
+                if (typeof SmartExpense !== 'undefined') {
+                    SmartExpense.showToast(`Executing: "${transcript}"`, 'success');
+                }
+                return;
+            }
+
+            // Try to parse as transaction
+            const catSelectEl = document.querySelector('#id_category');
+            const result = parse(transcript, catSelectEl);
+
+            if (result.amount || result.categoryValue) {
+                const type = result.type || 'expense';
+                const url = type === 'income' ? '/income/add/' : '/expenses/add/';
+                sessionStorage.setItem('voiceTransactionData', JSON.stringify(result));
+                
+                if (typeof SmartExpense !== 'undefined') {
+                    SmartExpense.showToast(`Adding ${type}: "${transcript}"`, 'success');
+                }
+                
+                window.location.href = url;
+            } else {
+                if (typeof SmartExpense !== 'undefined') {
+                    SmartExpense.showToast('Could not understand. Try "help" for commands.', 'warning');
+                }
+            }
+        };
+
+        return fab;
+    }
+
+    // ── Auto-fill from sessionStorage ───────────────────────────────────────────
+
+    function autoFillFromSession() {
+        const data = sessionStorage.getItem('voiceTransactionData');
+        if (!data) return;
+
+        try {
+            const result = JSON.parse(data);
+            sessionStorage.removeItem('voiceTransactionData');
+
+            // Fill form fields
+            setTimeout(() => {
+                if (result.amount) {
+                    const amountEl = document.querySelector('#id_amount');
+                    if (amountEl) {
+                        amountEl.value = result.amount;
+                        amountEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
+                if (result.categoryValue) {
+                    const catEl = document.querySelector('#id_category');
+                    if (catEl) {
+                        catEl.value = result.categoryValue;
+                        catEl.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+                if (result.description) {
+                    const descEl = document.querySelector('#id_description');
+                    if (descEl) {
+                        descEl.value = result.description;
+                        descEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
+                if (result.type) {
+                    const typeEl = document.querySelector('#id_transaction_type');
+                    if (typeEl) {
+                        typeEl.value = result.type;
+                        typeEl.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+
+                if (typeof SmartExpense !== 'undefined') {
+                    SmartExpense.showToast('Form auto-filled from voice input', 'success');
+                }
+            }, 100);
+        } catch (e) {
+            console.error('Error parsing voice transaction data:', e);
+        }
+    }
+
+    // Initialize auto-fill on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', autoFillFromSession);
+    } else {
+        autoFillFromSession();
+    }
+
     // Public API
-    return { createButton, parse, extractAmount, detectType, findCategoryOption };
+    return {
+        createButton,
+        parse,
+        extractAmount,
+        detectType,
+        findCategoryOption,
+        createCommandButton,
+        createFloatingButton,
+        showVoiceHelp,
+        detectCommand,
+        executeCommand
+    };
 
 })();
 

@@ -85,6 +85,20 @@
     </div>
     {% endif %}
 
+    <!-- Voice Command Floating Button -->
+    {% if request.user.is_authenticated %}
+    <div id="voiceCommandFab"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fabContainer = document.getElementById('voiceCommandFab');
+            if (fabContainer && typeof VoiceInput !== 'undefined') {
+                const fab = VoiceInput.createFloatingButton();
+                fabContainer.appendChild(fab);
+            }
+        });
+    </script>
+    {% endif %}
+
     {% block content %}{% endblock %}
 
     <!-- Bootstrap JS -->

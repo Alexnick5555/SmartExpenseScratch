@@ -12,14 +12,15 @@ from django.db.models.functions import TruncMonth, TruncDay
 from django.utils import timezone
 from datetime import datetime, timedelta
 from decimal import Decimal
+from dateutil.relativedelta import relativedelta
 import csv
 import json
-from .models import User, Account, Transaction, Subscription, Budget, SavingsGoal, Category
+from .models import User, Account, Transaction, Subscription, Budget, SavingsGoal, Category, TransactionTemplate, RecurringTransaction
 from .forms import (
     UserRegistrationForm, UserLoginForm, UserProfileForm,
     AccountForm, TransactionForm, QuickTransactionForm,
     SubscriptionForm, BudgetForm, SavingsGoalForm, DateRangeForm,
-    PasswordChangeForm, DeleteAccountForm
+    PasswordChangeForm, DeleteAccountForm, AdvancedSearchForm, TransactionTemplateForm, RecurringTransactionForm
 )
 
 
@@ -374,30 +375,60 @@ def dashboard(request):
 
 @login_required
 def expense_list(request):
-    """List all expenses."""
+    """List all expenses with advanced search."""
     user = request.user
     expenses = Transaction.objects.filter(user=user, transaction_type='expense')
 
-    # Filter by date range
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-    category = request.GET.get('category')
-
-    if start_date:
-        expenses = expenses.filter(date__gte=start_date)
-    if end_date:
-        expenses = expenses.filter(date__lte=end_date)
-    if category:
-        expenses = expenses.filter(category_id=category)
-
+    # Advanced search filters
+    search_form = AdvancedSearchForm(user=user, data=request.GET or None)
+    
+    if search_form.is_valid():
+        # Description search
+        description = search_form.cleaned_data.get('description')
+        if description:
+            expenses = expenses.filter(description__icontains=description)
+        
+        # Amount range
+        min_amount = search_form.cleaned_data.get('min_amount')
+        max_amount = search_form.cleaned_data.get('max_amount')
+        if min_amount:
+            expenses = expenses.filter(amount__gte=min_amount)
+        if max_amount:
+            expenses = expenses.filter(amount__lte=max_amount)
+        
+        # Date range
+        start_date = search_form.cleaned_data.get('start_date')
+        end_date = search_form.cleaned_data.get('end_date')
+        if start_date:
+            expenses = expenses.filter(date__gte=start_date)
+        if end_date:
+            expenses = expenses.filter(date__lte=end_date)
+        
+        # Category filter (multiple)
+        categories = search_form.cleaned_data.get('category')
+        if categories:
+            expenses = expenses.filter(category__in=categories)
+        
+        # Account filter (multiple)
+        accounts = search_form.cleaned_data.get('account')
+        if accounts:
+            expenses = expenses.filter(account__in=accounts)
+        
+        # Tags search
+        tags = search_form.cleaned_data.get('tags')
+        if tags:
+            expenses = expenses.filter(tags__icontains=tags)
+    
     expenses = expenses.order_by('-date', '-created_at')
 
-    categories = Category.objects.filter(is_active=True, category_type__in=['expense', 'both'])
+    # Get all categories for filter form
+    all_categories = Category.objects.filter(is_active=True, category_type__in=['expense', 'both'])
 
     context = {
         'transactions': expenses,
-        'categories': categories,
-        'filter_form': DateRangeForm(),
+        'categories': all_categories,
+        'search_form': search_form,
+        'has_filters': any(search_form.cleaned_data.values()) if search_form.is_valid() else False,
     }
     return render(request, 'expenses/expense_list.html', context)
 
@@ -446,31 +477,158 @@ def expense_delete(request, pk):
 
 
 @login_required
+def bulk_transaction_action(request):
+    """Handle bulk actions on transactions."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+    
+    transaction_ids = request.POST.getlist('transaction_ids[]')
+    action = request.POST.get('action')
+    
+    if not transaction_ids or not action:
+        return JsonResponse({'success': False, 'error': 'Missing required parameters'}, status=400)
+    
+    # Get transactions belonging to user
+    transactions = Transaction.objects.filter(pk__in=transaction_ids, user=request.user)
+    
+    if not transactions.exists():
+        return JsonResponse({'success': False, 'error': 'No valid transactions found'}, status=404)
+    
+    count = 0
+    
+    try:
+        if action == 'delete':
+            # Delete transactions and update account balances
+            for tx in transactions:
+                if tx.account:
+                    if tx.transaction_type == 'expense':
+                        tx.account.balance += tx.amount
+                    else:
+                        tx.account.balance -= tx.amount
+                    tx.account.save()
+                tx.delete()
+                count += 1
+            messages.success(request, f'{count} transaction(s) deleted successfully!')
+        
+        elif action == 'update_category':
+            category_id = request.POST.get('category_id')
+            if not category_id:
+                return JsonResponse({'success': False, 'error': 'Category ID required'}, status=400)
+            
+            category = get_object_or_404(Category, pk=category_id, is_active=True)
+            transactions.update(category=category)
+            count = transactions.count()
+            messages.success(request, f'{count} transaction(s) updated with new category!')
+        
+        elif action == 'update_account':
+            account_id = request.POST.get('account_id')
+            if not account_id:
+                return JsonResponse({'success': False, 'error': 'Account ID required'}, status=400)
+            
+            account = get_object_or_404(Account, pk=account_id, user=request.user, is_active=True)
+            
+            # Update account balances for old and new accounts
+            for tx in transactions:
+                if tx.account and tx.account != account:
+                    # Reverse old account balance
+                    if tx.transaction_type == 'expense':
+                        tx.account.balance += tx.amount
+                    else:
+                        tx.account.balance -= tx.amount
+                    tx.account.save()
+                
+                # Apply to new account
+                if tx.transaction_type == 'expense':
+                    account.balance -= tx.amount
+                else:
+                    account.balance += tx.amount
+            
+            account.save()
+            transactions.update(account=account)
+            count = transactions.count()
+            messages.success(request, f'{count} transaction(s) moved to new account!')
+        
+        elif action == 'add_tags':
+            tags = request.POST.get('tags', '')
+            if not tags:
+                return JsonResponse({'success': False, 'error': 'Tags required'}, status=400)
+            
+            for tx in transactions:
+                existing_tags = tx.tags.split(',') if tx.tags else []
+                new_tags = tags.split(',')
+                combined_tags = list(set(existing_tags + new_tags))
+                tx.tags = ','.join(filter(None, combined_tags))
+                tx.save()
+                count += 1
+            messages.success(request, f'{count} transaction(s) updated with new tags!')
+        
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid action'}, status=400)
+        
+        return JsonResponse({'success': True, 'count': count})
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
 def income_list(request):
-    """List all income."""
+    """List all income with advanced search."""
     user = request.user
     income_list = Transaction.objects.filter(user=user, transaction_type='income')
 
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-    category = request.GET.get('category')
-
-    if start_date:
-        income_list = income_list.filter(date__gte=start_date)
-    if end_date:
-        income_list = income_list.filter(date__lte=end_date)
-    if category:
-        income_list = income_list.filter(category_id=category)
-
+    # Advanced search filters
+    search_form = AdvancedSearchForm(user=user, data=request.GET or None)
+    
+    if search_form.is_valid():
+        # Description search
+        description = search_form.cleaned_data.get('description')
+        if description:
+            income_list = income_list.filter(description__icontains=description)
+        
+        # Amount range
+        min_amount = search_form.cleaned_data.get('min_amount')
+        max_amount = search_form.cleaned_data.get('max_amount')
+        if min_amount:
+            income_list = income_list.filter(amount__gte=min_amount)
+        if max_amount:
+            income_list = income_list.filter(amount__lte=max_amount)
+        
+        # Date range
+        start_date = search_form.cleaned_data.get('start_date')
+        end_date = search_form.cleaned_data.get('end_date')
+        if start_date:
+            income_list = income_list.filter(date__gte=start_date)
+        if end_date:
+            income_list = income_list.filter(date__lte=end_date)
+        
+        # Category filter (multiple)
+        categories = search_form.cleaned_data.get('category')
+        if categories:
+            income_list = income_list.filter(category__in=categories)
+        
+        # Account filter (multiple)
+        accounts = search_form.cleaned_data.get('account')
+        if accounts:
+            income_list = income_list.filter(account__in=accounts)
+        
+        # Tags search
+        tags = search_form.cleaned_data.get('tags')
+        if tags:
+            income_list = income_list.filter(tags__icontains=tags)
+    
     income_list = income_list.order_by('-date', '-created_at')
 
-    categories = Category.objects.filter(is_active=True, category_type__in=['income', 'both'])
+    # Get all categories for filter form
+    all_categories = Category.objects.filter(is_active=True, category_type__in=['income', 'both'])
 
     context = {
         'transactions': income_list,
-        'categories': categories,
+        'categories': all_categories,
+        'search_form': search_form,
+        'has_filters': any(search_form.cleaned_data.values()) if search_form.is_valid() else False,
     }
-    return render(request, 'expenses/income_list.html', {'transactions': income_list, 'categories': categories})
+    return render(request, 'expenses/income_list.html', context)
 
 
 @login_required
@@ -514,6 +672,513 @@ def income_delete(request, pk):
     income.delete()
     messages.success(request, 'Income deleted successfully!')
     return redirect('income_list')
+
+
+# ─── Transaction Templates ─────────────────────────────────────────────────────
+
+@login_required
+def template_list(request):
+    """List all transaction templates."""
+    templates = TransactionTemplate.objects.filter(user=request.user)
+    return render(request, 'transactions/template_list.html', {'templates': templates})
+
+
+@login_required
+def template_add(request):
+    """Add a new transaction template."""
+    if request.method == 'POST':
+        form = TransactionTemplateForm(request.user, request.POST)
+        if form.is_valid():
+            template = form.save(commit=False)
+            template.user = request.user
+            template.save()
+            messages.success(request, 'Template created successfully!')
+            return redirect('template_list')
+    else:
+        form = TransactionTemplateForm(request.user)
+    return render(request, 'transactions/template_form.html', {'form': form, 'title': 'Add Template'})
+
+
+@login_required
+def template_edit(request, pk):
+    """Edit a transaction template."""
+    template = get_object_or_404(TransactionTemplate, pk=pk, user=request.user)
+    if request.method == 'POST':
+        form = TransactionTemplateForm(request.user, request.POST, instance=template)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Template updated successfully!')
+            return redirect('template_list')
+    else:
+        form = TransactionTemplateForm(request.user, instance=template)
+    return render(request, 'transactions/template_form.html', {'form': form, 'title': 'Edit Template'})
+
+
+@login_required
+def template_delete(request, pk):
+    """Delete a transaction template."""
+    template = get_object_or_404(TransactionTemplate, pk=pk, user=request.user)
+    template.delete()
+    messages.success(request, 'Template deleted successfully!')
+    return redirect('template_list')
+
+
+@login_required
+def use_template(request, pk):
+    """Use a template to create a transaction."""
+    template = get_object_or_404(TransactionTemplate, pk=pk, user=request.user)
+    
+    # Create transaction from template
+    transaction = Transaction(
+        user=request.user,
+        account=template.account,
+        category=template.category,
+        transaction_type=template.transaction_type,
+        amount=template.amount,
+        description=template.description,
+        tags=template.tags,
+        date=timezone.now().date()
+    )
+    transaction.save()
+    
+    # Update template usage count
+    template.use_template()
+    
+    messages.success(request, f'Transaction created from "{template.name}"!')
+    return redirect('expense_list' if template.transaction_type == 'expense' else 'income_list')
+
+
+# ─── Spending Heatmap ─────────────────────────────────────────────────────
+
+@login_required
+def spending_heatmap(request):
+    """Spending heatmap visualization."""
+    user = request.user
+    today = timezone.now().date()
+    
+    # Get date range from query params (default to last 90 days)
+    days_back = int(request.GET.get('days', 90))
+    start_date = today - timedelta(days=days_back)
+    
+    # Get daily spending data
+    daily_spending = Transaction.objects.filter(
+        user=user,
+        transaction_type='expense',
+        date__gte=start_date,
+        date__lte=today
+    ).values('date').annotate(
+        daily_total=Sum('amount')
+    ).order_by('date')
+    
+    # Calculate max spending for color intensity
+    max_spending = 0
+    for item in daily_spending:
+        if item['daily_total']:
+            max_spending = max(max_spending, float(item['daily_total']))
+    
+    # Prepare heatmap data
+    heatmap_data = []
+    current_date = start_date
+    while current_date <= today:
+        day_data = next((d for d in daily_spending if d['date'] == current_date), None)
+        amount = float(day_data['daily_total']) if day_data and day_data['daily_total'] else 0
+        
+        # Calculate intensity (0-100)
+        intensity = int((amount / max_spending * 100)) if max_spending > 0 else 0
+        intensity = min(intensity, 100)
+        
+        heatmap_data.append({
+            'date': current_date,
+            'amount': amount,
+            'intensity': intensity,
+            'day_name': current_date.strftime('%a'),
+            'day_num': current_date.day
+        })
+        
+        current_date += timedelta(days=1)
+    
+    # Calculate statistics
+    total_spending = sum(d['amount'] for d in heatmap_data)
+    avg_spending = total_spending / len(heatmap_data) if heatmap_data else 0
+    max_day = max(heatmap_data, key=lambda x: x['amount']) if heatmap_data else None
+    
+    context = {
+        'heatmap_data': heatmap_data,
+        'total_spending': total_spending,
+        'avg_spending': avg_spending,
+        'max_day': max_day,
+        'days_back': days_back,
+        'start_date': start_date,
+        'end_date': today,
+    }
+    return render(request, 'analytics/spending_heatmap.html', context)
+
+
+@login_required
+def top_spending_analysis(request):
+    """Top spending analysis view."""
+    user = request.user
+    today = timezone.now().date()
+    
+    # Get date range from query params (default to current month)
+    days_back = int(request.GET.get('days', 30))
+    start_date = today - timedelta(days=days_back)
+    
+    # Top 5 categories by spending
+    top_categories = Transaction.objects.filter(
+        user=user,
+        transaction_type='expense',
+        date__gte=start_date,
+        date__lte=today
+    ).values('category__name', 'category__color', 'category__icon').annotate(
+        total=Sum('amount'),
+        count=Count('id')
+    ).order_by('-total')[:5]
+    
+    # Top 5 merchants (from description)
+    top_merchants = Transaction.objects.filter(
+        user=user,
+        transaction_type='expense',
+        date__gte=start_date,
+        date__lte=today
+    ).values('description').annotate(
+        total=Sum('amount'),
+        count=Count('id')
+    ).order_by('-total')[:5]
+    
+    # Top 5 days of week by spending
+    day_of_week_spending = Transaction.objects.filter(
+        user=user,
+        transaction_type='expense',
+        date__gte=start_date,
+        date__lte=today
+    ).annotate(day_of_week=TruncDay('date')).values('day_of_week').annotate(
+        total=Sum('amount')
+    ).order_by('-total')[:7]
+    
+    day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    
+    context = {
+        'top_categories': top_categories,
+        'top_merchants': top_merchants,
+        'day_of_week_spending': day_of_week_spending,
+        'day_names': day_names,
+        'days_back': days_back,
+        'start_date': start_date,
+        'end_date': today,
+    }
+    return render(request, 'analytics/top_spending.html', context)
+
+
+@login_required
+def income_vs_expense_trends(request):
+    """Income vs Expense Trends view showing the gap between income and expenses over time."""
+    user = request.user
+    today = timezone.now().date()
+    
+    # Get period from query params (default to 6 months)
+    period = request.GET.get('period', '6m')
+    
+    if period == '1m':
+        months = 1
+    elif period == '3m':
+        months = 3
+    elif period == '12m':
+        months = 12
+    else:
+        months = 6
+    
+    # Calculate start date
+    start_date = today - relativedelta(months=months)
+    
+    # Get monthly income and expense data
+    monthly_data = []
+    current_date = start_date
+    
+    while current_date <= today:
+        # Get first and last day of the month
+        month_start = current_date.replace(day=1)
+        if month_start.month == 12:
+            month_end = month_start.replace(year=month_start.year + 1, month=1, day=1) - timedelta(days=1)
+        else:
+            month_end = month_start.replace(month=month_start.month + 1, day=1) - timedelta(days=1)
+        
+        # Calculate totals for the month
+        month_income = Transaction.objects.filter(
+            user=user,
+            transaction_type='income',
+            date__gte=month_start,
+            date__lte=month_end
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        month_expense = Transaction.objects.filter(
+            user=user,
+            transaction_type='expense',
+            date__gte=month_start,
+            date__lte=month_end
+        ).aggregate(total=Sum('amount'))['total']
+        
+        month_income = float(month_income) if month_income is not None else 0
+        month_expense = float(month_expense) if month_expense is not None else 0
+        
+        monthly_data.append({
+            'month': month_start.strftime('%b %Y'),
+            'income': month_income,
+            'expense': month_expense,
+            'net': month_income - month_expense,
+            'savings_rate': round((month_income - month_expense) / month_income * 100, 1) if month_income > 0 else 0
+        })
+        
+        # Move to next month
+        if current_date.month == 12:
+            current_date = current_date.replace(year=current_date.year + 1, month=1, day=1)
+        else:
+            current_date = current_date.replace(month=current_date.month + 1, day=1)
+    
+    # Calculate totals and averages
+    total_income = sum(d['income'] for d in monthly_data)
+    total_expense = sum(d['expense'] for d in monthly_data)
+    total_net = total_income - total_expense
+    avg_monthly_income = total_income / len(monthly_data) if monthly_data else 0
+    avg_monthly_expense = total_expense / len(monthly_data) if monthly_data else 0
+    avg_savings_rate = sum(d['savings_rate'] for d in monthly_data) / len(monthly_data) if monthly_data else 0
+    
+    # Find best and worst months
+    best_month = max(monthly_data, key=lambda x: x['net']) if monthly_data else None
+    worst_month = min(monthly_data, key=lambda x: x['net']) if monthly_data else None
+    
+    context = {
+        'monthly_data': monthly_data,
+        'total_income': total_income,
+        'total_expense': total_expense,
+        'total_net': total_net,
+        'avg_monthly_income': avg_monthly_income,
+        'avg_monthly_expense': avg_monthly_expense,
+        'avg_savings_rate': avg_savings_rate,
+        'best_month': best_month,
+        'worst_month': worst_month,
+        'period': period,
+        'start_date': start_date,
+        'end_date': today,
+    }
+    return render(request, 'analytics/income_vs_expense_trends.html', context)
+
+
+@login_required
+def net_worth_dashboard(request):
+    """Net Worth Dashboard showing total net worth over time."""
+    user = request.user
+    today = timezone.now().date()
+    
+    # Get period from query params (default to 12 months)
+    period = request.GET.get('period', '12m')
+    
+    if period == '3m':
+        months = 3
+    elif period == '6m':
+        months = 6
+    elif period == '24m':
+        months = 24
+    else:
+        months = 12
+    
+    # Calculate start date
+    start_date = today - relativedelta(months=months)
+    
+    # Get all accounts for the user
+    accounts = Account.objects.filter(user=user)
+    
+    # Calculate current net worth
+    current_assets = sum(account.get_available_balance() for account in accounts if account.account_type in ['checking', 'savings', 'cash'])
+    current_investments = sum(account.get_available_balance() for account in accounts if account.account_type == 'investment')
+    current_liabilities = sum(abs(account.get_available_balance()) for account in accounts if account.account_type in ['credit_card', 'loan'])
+    current_net_worth = current_assets + current_investments - current_liabilities
+    
+    # Get monthly net worth data
+    monthly_net_worth = []
+    current_date = start_date
+    
+    while current_date <= today:
+        # Get first and last day of the month
+        month_start = current_date.replace(day=1)
+        if month_start.month == 12:
+            month_end = month_start.replace(year=month_start.year + 1, month=1, day=1) - timedelta(days=1)
+        else:
+            month_end = month_start.replace(month=month_start.month + 1, day=1) - timedelta(days=1)
+        
+        # Calculate net worth at the end of the month
+        # For simplicity, we'll use current balances and adjust by transactions
+        month_assets = sum(account.get_available_balance() for account in accounts if account.account_type in ['checking', 'savings', 'cash'])
+        month_investments = sum(account.get_available_balance() for account in accounts if account.account_type == 'investment')
+        month_liabilities = sum(abs(account.get_available_balance()) for account in accounts if account.account_type in ['credit_card', 'loan'])
+        month_net_worth = month_assets + month_investments - month_liabilities
+        
+        monthly_net_worth.append({
+            'month': month_start.strftime('%b %Y'),
+            'assets': float(month_assets),
+            'investments': float(month_investments),
+            'liabilities': float(month_liabilities),
+            'net_worth': float(month_net_worth)
+        })
+        
+        # Move to next month
+        if current_date.month == 12:
+            current_date = current_date.replace(year=current_date.year + 1, month=1, day=1)
+        else:
+            current_date = current_date.replace(month=current_date.month + 1, day=1)
+    
+    # Calculate growth
+    if len(monthly_net_worth) > 1:
+        start_net_worth = monthly_net_worth[0]['net_worth']
+        end_net_worth = monthly_net_worth[-1]['net_worth']
+        net_worth_change = end_net_worth - start_net_worth
+        net_worth_change_percent = (net_worth_change / start_net_worth * 100) if start_net_worth != 0 else 0
+    else:
+        net_worth_change = 0
+        net_worth_change_percent = 0
+    
+    # Account breakdown
+    account_breakdown = []
+    for account in accounts:
+        balance = account.get_available_balance()
+        if account.account_type in ['credit_card', 'loan']:
+            balance = abs(balance)
+        
+        account_breakdown.append({
+            'name': account.name,
+            'type': account.account_type,
+            'balance': float(balance),
+            'icon': account.icon or 'bi-wallet2',
+            'color': account.color or '#6B7280'
+        })
+    
+    context = {
+        'current_assets': current_assets,
+        'current_investments': current_investments,
+        'current_liabilities': current_liabilities,
+        'current_net_worth': current_net_worth,
+        'monthly_net_worth': monthly_net_worth,
+        'net_worth_change': net_worth_change,
+        'net_worth_change_percent': net_worth_change_percent,
+        'account_breakdown': account_breakdown,
+        'period': period,
+        'start_date': start_date,
+        'end_date': today,
+    }
+    return render(request, 'analytics/net_worth_dashboard.html', context)
+
+
+@login_required
+def recurring_transaction_list(request):
+    """List all recurring transactions."""
+    user = request.user
+    recurring_transactions = RecurringTransaction.objects.filter(user=user)
+    
+    # Filter by status
+    status_filter = request.GET.get('status', '')
+    if status_filter:
+        recurring_transactions = recurring_transactions.filter(status=status_filter)
+    
+    # Calculate upcoming due dates
+    today = timezone.now().date()
+    for rt in recurring_transactions:
+        rt.days_until_due = (rt.next_due_date - today).days if rt.next_due_date else None
+        rt.is_overdue = rt.next_due_date < today if rt.next_due_date else False
+    
+    context = {
+        'recurring_transactions': recurring_transactions,
+        'status_filter': status_filter,
+    }
+    return render(request, 'recurring_transactions/recurring_transaction_list.html', context)
+
+
+@login_required
+def recurring_transaction_add(request):
+    """Add a new recurring transaction."""
+    if request.method == 'POST':
+        form = RecurringTransactionForm(request.user, request.POST)
+        if form.is_valid():
+            recurring_transaction = form.save(commit=False)
+            recurring_transaction.user = request.user
+            recurring_transaction.save()
+            messages.success(request, f'Recurring transaction "{recurring_transaction.name}" has been created.')
+            return redirect('recurring_transaction_list')
+    else:
+        form = RecurringTransactionForm(request.user)
+    
+    context = {'form': form, 'title': 'Add Recurring Transaction'}
+    return render(request, 'recurring_transactions/recurring_transaction_form.html', context)
+
+
+@login_required
+def recurring_transaction_edit(request, pk):
+    """Edit an existing recurring transaction."""
+    recurring_transaction = get_object_or_404(RecurringTransaction, pk=pk, user=request.user)
+    
+    if request.method == 'POST':
+        form = RecurringTransactionForm(request.user, request.POST, instance=recurring_transaction)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Recurring transaction "{recurring_transaction.name}" has been updated.')
+            return redirect('recurring_transaction_list')
+    else:
+        form = RecurringTransactionForm(request.user, instance=recurring_transaction)
+    
+    context = {'form': form, 'title': 'Edit Recurring Transaction', 'recurring_transaction': recurring_transaction}
+    return render(request, 'recurring_transactions/recurring_transaction_form.html', context)
+
+
+@login_required
+def recurring_transaction_delete(request, pk):
+    """Delete a recurring transaction."""
+    recurring_transaction = get_object_or_404(RecurringTransaction, pk=pk, user=request.user)
+    
+    if request.method == 'POST':
+        name = recurring_transaction.name
+        recurring_transaction.delete()
+        messages.success(request, f'Recurring transaction "{name}" has been deleted.')
+        return redirect('recurring_transaction_list')
+    
+    context = {'recurring_transaction': recurring_transaction}
+    return render(request, 'recurring_transactions/recurring_transaction_confirm_delete.html', context)
+
+
+@login_required
+def recurring_transaction_process(request, pk):
+    """Manually process a recurring transaction."""
+    recurring_transaction = get_object_or_404(RecurringTransaction, pk=pk, user=request.user)
+    
+    if recurring_transaction.status != 'active':
+        messages.warning(request, 'Only active recurring transactions can be processed.')
+        return redirect('recurring_transaction_list')
+    
+    try:
+        transaction = recurring_transaction.process_transaction()
+        messages.success(request, f'Transaction "{transaction.description}" of ₹{transaction.amount} has been created.')
+    except Exception as e:
+        messages.error(request, f'Error processing transaction: {str(e)}')
+    
+    return redirect('recurring_transaction_list')
+
+
+@login_required
+def recurring_transaction_pause(request, pk):
+    """Pause a recurring transaction."""
+    recurring_transaction = get_object_or_404(RecurringTransaction, pk=pk, user=request.user)
+    recurring_transaction.status = 'paused'
+    recurring_transaction.save()
+    messages.success(request, f'Recurring transaction "{recurring_transaction.name}" has been paused.')
+    return redirect('recurring_transaction_list')
+
+
+@login_required
+def recurring_transaction_resume(request, pk):
+    """Resume a paused recurring transaction."""
+    recurring_transaction = get_object_or_404(RecurringTransaction, pk=pk, user=request.user)
+    recurring_transaction.status = 'active'
+    recurring_transaction.save()
+    messages.success(request, f'Recurring transaction "{recurring_transaction.name}" has been resumed.')
+    return redirect('recurring_transaction_list')
 
 
 @login_required
@@ -791,24 +1456,32 @@ def reports(request):
         end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
 
     # Expense breakdown by category
-    expense_by_category = Transaction.objects.filter(
+    expense_by_category = list(Transaction.objects.filter(
         user=user,
         transaction_type='expense',
         date__gte=start_date,
         date__lte=end_date
     ).values('category__name', 'category__color', 'category__icon').annotate(
         total=Sum('amount')
-    ).order_by('-total')
+    ).order_by('-total'))
+
+    # Convert Decimal to float
+    for item in expense_by_category:
+        item['total'] = float(item['total']) if item['total'] else 0
 
     # Income breakdown by category
-    income_by_category = Transaction.objects.filter(
+    income_by_category = list(Transaction.objects.filter(
         user=user,
         transaction_type='income',
         date__gte=start_date,
         date__lte=end_date
     ).values('category__name', 'category__color', 'category__icon').annotate(
         total=Sum('amount')
-    ).order_by('-total')
+    ).order_by('-total'))
+
+    # Convert Decimal to float
+    for item in income_by_category:
+        item['total'] = float(item['total']) if item['total'] else 0
 
     # Monthly summary
     total_expense = Transaction.objects.filter(
@@ -826,14 +1499,21 @@ def reports(request):
     ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0')
 
     # Daily transactions
-    daily_transactions = Transaction.objects.filter(
+    daily_transactions = list(Transaction.objects.filter(
         user=user,
         date__gte=start_date,
         date__lte=end_date
     ).annotate(day=TruncDay('date')).values('day').annotate(
         income=Sum('amount', filter=Q(transaction_type='income')),
         expense=Sum('amount', filter=Q(transaction_type='expense'))
-    ).order_by('day')
+    ).order_by('day'))
+
+    # Convert Decimal to float and datetime to string
+    for item in daily_transactions:
+        item['income'] = float(item['income']) if item['income'] else 0
+        item['expense'] = float(item['expense']) if item['expense'] else 0
+        if item.get('day'):
+            item['day'] = item['day'].strftime('%Y-%m-%d')
 
     context = {
         'expense_by_category': list(expense_by_category),

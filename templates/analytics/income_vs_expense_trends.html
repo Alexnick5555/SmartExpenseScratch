@@ -1,0 +1,450 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Income vs Expense Trends - SmartExpense{% endblock %}
+
+{% block extra_css %}
+<style>
+    .trends-container {
+        padding: 2rem 0;
+    }
+    
+    .trends-header {
+        margin-bottom: 2rem;
+    }
+    
+    .trends-header h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .trends-header p {
+        color: #94A3B8;
+        margin-bottom: 1.5rem;
+    }
+    
+    .period-selector {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .period-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.05);
+        color: #E2E8F0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .period-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .period-btn.active {
+        background: #3B82F6;
+        border-color: #3B82F6;
+        color: white;
+    }
+    
+    .chart-card {
+        background: #1E293B;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .chart-card h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 400px;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-card {
+        background: #1E293B;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 1.25rem;
+    }
+    
+    .stat-card .label {
+        font-size: 0.875rem;
+        color: #94A3B8;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-card .value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-card .trend {
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .stat-card .trend.positive {
+        color: #10B981;
+    }
+    
+    .stat-card .trend.negative {
+        color: #EF4444;
+    }
+    
+    .stat-card.income .value {
+        color: #10B981;
+    }
+    
+    .stat-card.expense .value {
+        color: #EF4444;
+    }
+    
+    .stat-card.net .value {
+        color: #3B82F6;
+    }
+    
+    .insights-card {
+        background: #1E293B;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 1.25rem;
+    }
+    
+    .insights-card h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .insight-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .insight-item:last-child {
+        border-bottom: none;
+    }
+    
+    .insight-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    
+    .insight-icon.positive {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10B981;
+    }
+    
+    .insight-icon.negative {
+        background: rgba(239, 68, 68, 0.2);
+        color: #EF4444;
+    }
+    
+    .insight-icon.info {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3B82F6;
+    }
+    
+    .insight-content h4 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .insight-content p {
+        font-size: 0.875rem;
+        color: #94A3B8;
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .data-table th {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #94A3B8;
+        font-weight: 600;
+    }
+    
+    .data-table td {
+        font-size: 0.875rem;
+    }
+    
+    .data-table .positive {
+        color: #10B981;
+    }
+    
+    .data-table .negative {
+        color: #EF4444;
+    }
+    
+    .data-table .net-positive {
+        color: #10B981;
+    }
+    
+    .data-table .net-negative {
+        color: #EF4444;
+    }
+    
+    @media (max-width: 768px) {
+        .trends-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .chart-container {
+            height: 300px;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="dashboard-content">
+        <div class="trends-container">
+            <div class="container">
+                <div class="trends-header">
+                    <h1>Income vs Expense Trends</h1>
+                    <p>Track the gap between your income and expenses over time</p>
+                    
+                    <div class="period-selector">
+                        <a href="?period=1m" class="period-btn {% if period == '1m' %}active{% endif %}">1 Month</a>
+                        <a href="?period=3m" class="period-btn {% if period == '3m' %}active{% endif %}">3 Months</a>
+                        <a href="?period=6m" class="period-btn {% if period == '6m' %}active{% endif %}">6 Months</a>
+                        <a href="?period=12m" class="period-btn {% if period == '12m' %}active{% endif %}">12 Months</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+            <div class="stat-card income">
+                <div class="label">Total Income</div>
+                <div class="value">₹{{ total_income|floatformat:2 }}</div>
+                <div class="trend">
+                    <span>Avg: ₹{{ avg_monthly_income|floatformat:2 }}/month</span>
+                </div>
+            </div>
+            
+            <div class="stat-card expense">
+                <div class="label">Total Expenses</div>
+                <div class="value">₹{{ total_expense|floatformat:2 }}</div>
+                <div class="trend">
+                    <span>Avg: ₹{{ avg_monthly_expense|floatformat:2 }}/month</span>
+                </div>
+            </div>
+            
+            <div class="stat-card net">
+                <div class="label">Net Savings</div>
+                <div class="value {% if total_net >= 0 %}positive{% else %}negative{% endif %}">
+                    ₹{{ total_net|floatformat:2 }}
+                </div>
+                <div class="trend">
+                    <span>Avg Savings Rate: {{ avg_savings_rate|floatformat:1 }}%</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Chart -->
+        <div class="chart-card">
+            <h3>Income vs Expense Over Time</h3>
+            <div class="chart-container" style="min-height: 300px; height: 300px;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Monthly Breakdown Table -->
+        <div class="chart-card">
+            <h3>Monthly Breakdown</h3>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Income</th>
+                            <th>Expenses</th>
+                            <th>Net</th>
+                            <th>Savings Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for month in monthly_data %}
+                        <tr>
+                            <td>{{ month.month }}</td>
+                            <td class="positive">₹{{ month.income|floatformat:2 }}</td>
+                            <td class="negative">₹{{ month.expense|floatformat:2 }}</td>
+                            <td class="{% if month.net >= 0 %}net-positive{% else %}net-negative{% endif %}">
+                                ₹{{ month.net|floatformat:2 }}
+                            </td>
+                            <td>{{ month.savings_rate }}%</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">No data available for the selected period</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Insights -->
+        <div class="insights-card">
+            <h3>Key Insights</h3>
+            
+            {% if best_month %}
+            <div class="insight-item">
+                <div class="insight-icon positive">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                </div>
+                <div class="insight-content">
+                    <h4>Best Month</h4>
+                    <p>{{ best_month.month }} with ₹{{ best_month.net|floatformat:2 }} net savings ({{ best_month.savings_rate }}% savings rate)</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if worst_month %}
+            <div class="insight-item">
+                <div class="insight-icon negative">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
+                    </svg>
+                </div>
+                <div class="insight-content">
+                    <h4>Worst Month</h4>
+                    <p>{{ worst_month.month }} with ₹{{ worst_month.net|floatformat:2 }} net ({{ worst_month.savings_rate }}% savings rate)</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="insight-item">
+                <div class="insight-icon info">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4"/>
+                        <path d="M12 8h.01"/>
+                    </svg>
+                </div>
+                <div class="insight-content">
+                    <h4>Average Savings Rate</h4>
+                    <p>Your average savings rate is {{ avg_savings_rate|floatformat:1 }}% over the selected period</p>
+                </div>
+            </div>
+            
+            {% if avg_savings_rate >= 20 %}
+            <div class="insight-item">
+                <div class="insight-icon positive">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                </div>
+                <div class="insight-content">
+                    <h4>Great Savings!</h4>
+                    <p>You're maintaining a healthy savings rate above 20%. Keep it up!</p>
+                </div>
+            </div>
+            {% elif avg_savings_rate >= 10 %}
+            <div class="insight-item">
+                <div class="insight-icon info">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4"/>
+                        <path d="M12 8h.01"/>
+                    </svg>
+                </div>
+                <div class="insight-content">
+                    <h4>Good Progress</h4>
+                    <p>Your savings rate is decent. Consider reducing expenses to reach 20%.</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="insight-item">
+                <div class="insight-icon negative">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </div>
+                <div class="insight-content">
+                    <h4>Low Savings Rate</h4>
+                    <p>Your savings rate is below 10%. Review your expenses and find areas to cut back.</p>
+                </div>
+            </div>
+            {% endif %}
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const canvas = document.getElementById('trendChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const monthlyData = {{ monthly_data|safe }};
+    
+    if (monthlyData && monthlyData.length > 0) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: monthlyData.map(d => d.month),
+                datasets: [
+                    { label: 'Income', data: monthlyData.map(d => d.income), borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 },
+                    { label: 'Expenses', data: monthlyData.map(d => d.expense), borderColor: '#EF4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+});
+</script>
+{% endblock %}

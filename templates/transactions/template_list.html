@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Transaction Templates - SmartExpense{% endblock %}
+{% block page_title %}Transaction Templates{% endblock %}
+
+{% block extra_css %}
+<style>
+    .content-area { padding: 2rem; }
+    .page-card { 
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px; 
+        padding: 1.5rem; 
+    }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem; }
+    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 600; color: white; }
+    .template-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    .template-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    .template-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(99, 102, 241, 0.5);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+    .template-card.favorite {
+        border-color: rgba(251, 191, 36, 0.5);
+    }
+    .template-name {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+    .template-details {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+    .template-amount {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #34D399;
+    }
+    .template-amount.expense {
+        color: #F87171;
+    }
+    .template-meta {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+    .template-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+    }
+    .template-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    .action-btn {
+        flex: 1;
+        padding: 0.6rem;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+    }
+    .action-btn.use {
+        background: linear-gradient(135deg, #6366F1, #8B5CF6);
+        color: white;
+    }
+    .action-btn.use:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+    }
+    .action-btn.edit {
+        background: rgba(99, 102, 241, 0.15);
+        color: #818CF8;
+    }
+    .action-btn.delete {
+        background: rgba(239, 68, 68, 0.15);
+        color: #F87171;
+    }
+    .favorite-star {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .favorite-star.active {
+        color: #FBBF24;
+    }
+    .favorite-star:hover {
+        color: #FBBF24;
+        transform: scale(1.2);
+    }
+    .usage-count {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+    .empty-state i {
+        font-size: 4rem;
+        opacity: 0.3;
+        margin-bottom: 1rem;
+    }
+    @media (max-width: 767px) {
+        .template-grid {
+            grid-template-columns: 1fr;
+        }
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="content-area">
+        <div class="page-card">
+            <div class="page-header">
+                <h2 class="page-title"><i class="bi bi-bookmark-star me-2"></i>Transaction Templates</h2>
+                <a href="{% url 'template_add' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-2"></i>New Template
+                </a>
+            </div>
+
+            {% if templates %}
+                <div class="template-grid">
+                    {% for template in templates %}
+                        <div class="template-card {% if template.is_favorite %}favorite{% endif %}">
+                            {% if template.is_favorite %}
+                                <i class="bi bi-star-fill favorite-star active"></i>
+                            {% endif %}
+                            
+                            <div class="template-name">{{ template.name }}</div>
+                            <div class="template-details">
+                                {{ template.description|truncatechars:80|default:"No description" }}
+                            </div>
+                            <div class="template-amount {% if template.transaction_type == 'expense' %}expense{% endif %}">
+                                {% if template.transaction_type == 'expense' %}-{% endif %}₹{{ template.amount|floatformat:2 }}
+                            </div>
+                            
+                            <div class="template-meta">
+                                <span class="template-badge">
+                                    <i class="bi bi-tag"></i>
+                                    {{ template.category.name|default:"Uncategorized" }}
+                                </span>
+                                <span class="template-badge">
+                                    <i class="bi bi-wallet2"></i>
+                                    {{ template.account.name|default:"No account" }}
+                                </span>
+                                <span class="template-badge">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                    Used {{ template.usage_count }} times
+                                </span>
+                            </div>
+                            
+                            <div class="template-actions">
+                                <a href="{% url 'use_template' template.pk %}" class="action-btn use">
+                                    <i class="bi bi-lightning-charge me-2"></i>Use
+                                </a>
+                                <a href="{% url 'template_edit' template.pk %}" class="action-btn edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'template_delete' template.pk %}" class="action-btn delete" onclick="return confirm('Delete this template?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-bookmark"></i>
+                    <p>No transaction templates yet</p>
+                    <p>Create templates for frequently repeated transactions to save time!</p>
+                    <a href="{% url 'template_add' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-2"></i>Create First Template
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}

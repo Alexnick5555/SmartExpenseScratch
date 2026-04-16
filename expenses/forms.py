@@ -4,7 +4,7 @@ Developed by Nitish Mishra & Nishant Singh
 """
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import User, Account, Transaction, Subscription, Budget, SavingsGoal, Category
+from .models import User, Account, Transaction, Subscription, Budget, SavingsGoal, Category, TransactionTemplate, RecurringTransaction
 
 
 class UserRegistrationForm(UserCreationForm):
@@ -219,7 +219,7 @@ class TransactionForm(forms.ModelForm):
 
     class Meta:
         model = Transaction
-        fields = ['account', 'category', 'transaction_type', 'amount', 'description', 'date', 'tags', 'is_recurring']
+        fields = ['account', 'category', 'transaction_type', 'amount', 'description', 'date', 'tags', 'notes', 'is_recurring']
         widgets = {
             'account': forms.Select(attrs={'class': 'form-select'}),
             'category': forms.Select(attrs={'class': 'form-select'}),
@@ -228,6 +228,7 @@ class TransactionForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Enter description...'}),
             'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'tags': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Comma-separated tags'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Additional notes or details...'}),
             'is_recurring': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
@@ -314,3 +315,115 @@ class DateRangeForm(forms.Form):
         required=True,
         widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
     )
+
+
+class AdvancedSearchForm(forms.Form):
+    """Advanced search form for transactions."""
+    description = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Search in description...'
+        })
+    )
+    min_amount = forms.DecimalField(
+        required=False,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Min amount',
+            'step': '0.01'
+        })
+    )
+    max_amount = forms.DecimalField(
+        required=False,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Max amount',
+            'step': '0.01'
+        })
+    )
+    start_date = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    end_date = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    category = forms.ModelMultipleChoiceField(
+        queryset=Category.objects.filter(is_active=True),
+        required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'})
+    )
+    account = forms.ModelMultipleChoiceField(
+        queryset=Account.objects.none(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'})
+    )
+    tags = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Search tags...'
+        })
+    )
+    transaction_type = forms.ChoiceField(
+        choices=[('', 'All Types'), ('expense', 'Expense'), ('income', 'Income')],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    
+    def __init__(self, user=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields['account'].queryset = Account.objects.filter(user=user, is_active=True)
+
+
+class TransactionTemplateForm(forms.ModelForm):
+    """Transaction template form."""
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['account'].queryset = Account.objects.filter(user=user, is_active=True)
+        self.fields['category'].queryset = Category.objects.filter(is_active=True)
+
+    class Meta:
+        model = TransactionTemplate
+        fields = ['name', 'amount', 'account', 'category', 'transaction_type', 'description', 'tags', 'is_favorite']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Template name (e.g., Monthly Grocery Run)'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': '0.00'}),
+            'account': forms.Select(attrs={'class': 'form-select'}),
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'transaction_type': forms.Select(attrs={'class': 'form-select'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Description...'}),
+            'tags': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Comma-separated tags'}),
+            'is_favorite': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class RecurringTransactionForm(forms.ModelForm):
+    """Recurring transaction form for automated bill payments."""
+    
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['account'].queryset = Account.objects.filter(user=user)
+        self.fields['category'].queryset = Category.objects.filter(is_active=True)
+        self.fields['start_date'].widget.attrs.update({'class': 'form-control', 'type': 'date'})
+        self.fields['end_date'].widget.attrs.update({'class': 'form-control', 'type': 'date'})
+        self.fields['next_due_date'].widget.attrs.update({'class': 'form-control', 'type': 'date'})
+    
+    class Meta:
+        model = RecurringTransaction
+        fields = ['name', 'amount', 'account', 'category', 'transaction_type',
+                  'description', 'tags', 'frequency', 'start_date', 'end_date', 'next_due_date', 'status']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Netflix Subscription'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}),
+            'account': forms.Select(attrs={'class': 'form-select'}),
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'transaction_type': forms.Select(attrs={'class': 'form-select'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Description...'}),
+            'tags': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Comma-separated tags'}),
+            'frequency': forms.Select(attrs={'class': 'form-select'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+        }

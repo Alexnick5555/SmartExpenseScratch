@@ -18,3 +18,11 @@ def safe_json(value):
 @register.filter
 def split(value, delimiter=','):
     return value.split(delimiter)
+
+
+@register.filter
+def replace(value, old, new=''):
+    """Replace all occurrences of old with new in the string."""
+    if value is None:
+        return ''
+    return str(value).replace(old, new)

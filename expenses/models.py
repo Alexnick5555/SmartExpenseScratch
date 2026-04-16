@@ -120,6 +120,7 @@ class Transaction(models.Model):
     description = models.TextField(blank=True)
     date = models.DateField(default=timezone.now)
     tags = models.CharField(max_length=255, blank=True, help_text='Comma-separated tags')
+    notes = models.TextField(blank=True, null=True, help_text='Additional notes or details')
     is_recurring = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -349,3 +350,127 @@ DEFAULT_INCOME_CATEGORIES = [
     ('Gift', 'bi-gift', '#E91E63'),
     ('Others', 'bi-three-dots', '#6B7280'),
 ]
+
+
+class TransactionTemplate(models.Model):
+    """Transaction templates for quick entry."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transaction_templates')
+    name = models.CharField(max_length=200)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    account = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True, related_name='templates')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='templates')
+    transaction_type = models.CharField(
+        max_length=10,
+        choices=Transaction.TRANSACTION_TYPE_CHOICES,
+        default='expense'
+    )
+    description = models.TextField(blank=True)
+    tags = models.CharField(max_length=255, blank=True, help_text='Comma-separated tags')
+    is_favorite = models.BooleanField(default=False)
+    usage_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = 'Transaction Templates'
+        ordering = ['-is_favorite', '-usage_count', '-created_at']
+
+    def __str__(self):
+        return f"{self.name}: {self.transaction_type} ₹{self.amount}"
+    
+    def use_template(self):
+        """Increment usage count when template is used."""
+        self.usage_count += 1
+        self.save()
+
+
+class RecurringTransaction(models.Model):
+    """Recurring transactions for automated bill payments."""
+    FREQUENCY_CHOICES = [
+        ('daily', 'Daily'),
+        ('weekly', 'Weekly'),
+        ('biweekly', 'Bi-weekly'),
+        ('monthly', 'Monthly'),
+        ('quarterly', 'Quarterly'),
+        ('yearly', 'Yearly'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('paused', 'Paused'),
+        ('completed', 'Completed'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recurring_transactions')
+    name = models.CharField(max_length=200)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    account = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True, related_name='recurring_transactions')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='recurring_transactions')
+    transaction_type = models.CharField(
+        max_length=10,
+        choices=Transaction.TRANSACTION_TYPE_CHOICES,
+        default='expense'
+    )
+    description = models.TextField(blank=True)
+    tags = models.CharField(max_length=255, blank=True, help_text='Comma-separated tags')
+    frequency = models.CharField(max_length=20, choices=FREQUENCY_CHOICES, default='monthly')
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True, help_text='Leave blank for indefinite')
+    next_due_date = models.DateField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    last_processed_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name_plural = 'Recurring Transactions'
+        ordering = ['next_due_date']
+    
+    def __str__(self):
+        return f"{self.name}: {self.transaction_type} ₹{self.amount} ({self.frequency})"
+    
+    def calculate_next_due_date(self):
+        """Calculate the next due date based on frequency."""
+        from datetime import timedelta
+        from dateutil.relativedelta import relativedelta
+        
+        if self.frequency == 'daily':
+            return self.next_due_date + timedelta(days=1)
+        elif self.frequency == 'weekly':
+            return self.next_due_date + timedelta(weeks=1)
+        elif self.frequency == 'biweekly':
+            return self.next_due_date + timedelta(weeks=2)
+        elif self.frequency == 'monthly':
+            return self.next_due_date + relativedelta(months=1)
+        elif self.frequency == 'quarterly':
+            return self.next_due_date + relativedelta(months=3)
+        elif self.frequency == 'yearly':
+            return self.next_due_date + relativedelta(years=1)
+        return self.next_due_date
+    
+    def process_transaction(self):
+        """Create a transaction from this recurring transaction."""
+        from django.utils import timezone
+        
+        transaction = Transaction.objects.create(
+            user=self.user,
+            amount=self.amount,
+            account=self.account,
+            category=self.category,
+            transaction_type=self.transaction_type,
+            description=self.description or self.name,
+            tags=self.tags,
+            date=timezone.now().date()
+        )
+        
+        # Update the recurring transaction
+        self.last_processed_date = self.next_due_date
+        self.next_due_date = self.calculate_next_due_date()
+        
+        # Check if we've reached the end date
+        if self.end_date and self.next_due_date > self.end_date:
+            self.status = 'completed'
+        
+        self.save()
+        
+        return transaction

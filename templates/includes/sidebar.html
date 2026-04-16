@@ -60,9 +60,33 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{% url 'income_vs_expense_trends' %}" class="nav-link {% if '/income-vs-expense' in request.path %}active{% endif %}">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>Income vs Expense</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'net_worth_dashboard' %}" class="nav-link {% if '/net-worth' in request.path %}active{% endif %}">
+                    <i class="bi bi-pie-chart"></i>
+                    <span>Net Worth</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{% url 'transaction_history' %}" class="nav-link {% if '/transactions' in request.path %}active{% endif %}">
                     <i class="bi bi-arrow-left-right"></i>
                     <span>Transactions</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'template_list' %}" class="nav-link {% if '/templates' in request.path %}active{% endif %}">
+                    <i class="bi bi-bookmark-star"></i>
+                    <span>Templates</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'recurring_transaction_list' %}" class="nav-link {% if '/recurring' in request.path %}active{% endif %}">
+                    <i class="bi bi-arrow-repeat"></i>
+                    <span>Recurring</span>
                 </a>
             </li>
             <li class="nav-item">
